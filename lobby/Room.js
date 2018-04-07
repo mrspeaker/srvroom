@@ -16,17 +16,17 @@ class Room {
     }
     client.room = this;
     clients.set(id, client);
-    client.send("joined room " + name);
+    client.send({action :"JOINED_ROOM", data: name});
   }
 
   handleMessage(id, msg) {
     this.onMessage && this.onMessage(id, msg);
-    this.broadcast(id, msg);
   }
 
   leave(client) {
     const { clients, name } = this;
     console.log("leaving", name, client.id);
+    client.room = null;
     clients.delete(client.id);
   }
 

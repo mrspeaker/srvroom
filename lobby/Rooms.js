@@ -16,6 +16,7 @@ class Rooms {
       client.room.leave(client);
     }
     this.rooms.lobby.join(client);
+    this.onEnterLobby && this.onEnterLobby(client);
   }
 
   add(name) {

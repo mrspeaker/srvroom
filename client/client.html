@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>server tests</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        background-color: #dfdfdf;
+      }
+      #host, #msg { width: 8em; }
+      #port { width: 3em; }
+    </style>
+  </head>
+  <body>
+    <h2>Client</h2>
+    <button id="btnJoin">join</button>
+    <label for="host">Host:</label><input type="text" id="host" value="localhost" />
+    <label for="port">Port:</label><input type="text" id="port" value="40401"/><br/>
+    <button id="btnSend">send</button>
+    <label for="msg">Msg:</label><input type="text" id="msg" />|
+    <button id="btnLeft">&lt;</button>
+    <button id="btnRight">&gt;</button>
+
+    <br/>
+    <div id="msgs">...</div>
+    <script type="module" src="./client.js"></script>
+  </body>
+</html>

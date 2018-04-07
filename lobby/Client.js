@@ -11,7 +11,7 @@ class Client {
     if (ws.readyState !== ws.OPEN) {
       return false;
     }
-    ws.send(msg);
+    ws.send(JSON.stringify(msg));
     return true;
   }
 }

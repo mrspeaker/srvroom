@@ -1,0 +1,15 @@
+{
+  "name": "netw",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "esm": "^3.0.14",
+    "ws": "^5.1.0"
+  }
+}
