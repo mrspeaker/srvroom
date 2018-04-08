@@ -114,6 +114,11 @@ class ClientGame {
     if (!world) {
       return;
     }
+
+    if (Math.random() < 0.3) {
+      this.xo = (Math.random() * 2 - 1) * 0.2;
+      this.zo = (Math.random() * 2 - 1) * 0.2;
+    }
     this.processInputs();
     world.tick();
     renderer.render(world.scene);
@@ -123,7 +128,7 @@ class ClientGame {
 
   processInputs() {
     const { xo, client_id } = this;
-    const input = { action: "INPUT", xo: xo * 8 };
+    const input = { action: "INPUT", xo: xo * 8, zo: xo * 8 };
 
     if (!xo) {
       return;

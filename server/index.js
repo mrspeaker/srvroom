@@ -25,12 +25,25 @@ rooms.onEnterLobby = () => {
   }
 };
 
+class Bot {
+  constructor (player, send) {
+    this.player = player;
+    this.send = send;
+  }
+  update() {
+    const xo = (Math.random() * 2 - 1) * 0.2;
+    const zo = (Math.random() * 2 - 1) * 0.2;
+    const input = { action: "INPUT", xo: xo * 8, zo: zo * 8 };
+    this.send(this.player.id, input);
+  }
+}
+
 class ServerGame {
   constructor(room) {
     this.room = room;
     this.game = new World();
     this.entities = new Map();
-
+    this.bots = [];
     room.onMessage = this.onClientMessage.bind(this);
 
     [...room.clients.values()].forEach(c => this.addPlayer(c.id));
@@ -70,30 +83,37 @@ class ServerGame {
       if (p) {
         // TODO: add input to list-to-process
         p.pos.x += msg.xo;
+        p.pos.z += msg.zo;
       } else {
         console.error("who is this?", id);
       }
     }
   }
 
+  addBot () {
+    const p = this.addPlayer((Math.random() * 1000) | 0);
+    this.bots.push(new Bot(p, this.onClientMessage.bind(this)));
+  }
+
   tick() {
-    const { game, room, entities } = this;
+    const { game, room, entities, bots } = this;
 
     if (Math.random() < 0.01) {
-      this.addPlayer((Math.random() * 1000) | 0);
+      this.addBot();
     }
 
-    // Fake inputs
-    entities.forEach(p => {
-      p.xo = Math.random() * 4 - 2;
-      p.zo = Math.random() * 4 - 2;
-
-      p.pos.x += p.xo;
-      p.pos.z += p.zo;
+    // TODO: bots should be ticked at client-speed not server-speed
+    bots.forEach(b => {
+      b.update();
     });
 
     const dead = game.tick();
-    dead.forEach(d => entities.delete(d));
+    dead.forEach(d => {
+      entities.delete(d);
+      // Remove dead bots
+      this.bots = this.bots.filter(b => b.player.id !== d);
+    });
+    
     const poss = this.getAllPos();
 
     room.clients.forEach(c => {
