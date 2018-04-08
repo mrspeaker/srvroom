@@ -1,16 +1,22 @@
 class Renderer {
-  constructor () {
-    const c = document.querySelector("canvas") || document.createElement("canvas");
+  constructor (w = 100, h = 100) {
+    let c = document.querySelector("canvas");
+    if (!c) {
+      c = document.createElement("canvas");
+      document.body.appendChild(c);
+    }
+    c.width = w;
+    c.height = h;
     this.ctx = c.getContext("2d");
-    document.body.appendChild(c);
   }
 
   render(scene) {
     const { ctx } = this;
-    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     scene.forEach(e => {
-      ctx.fillStyle = e.local ? "#830" : "#ff0";
-      ctx.fillRect(e.pos.x - 5, e.pos.z - 5, 10, 10);
+      ctx.fillStyle = e.local ? "#e30" : "#ff0";
+      ctx.fillRect(e.pos.x - 3, e.pos.z - 3, 6, 6);
     });
   }
 }

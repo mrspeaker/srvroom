@@ -6,27 +6,40 @@
     <style>
       body {
         font-family: sans-serif;
-        background-color: #dfdfdf;
         font-size: 8pt;
+      }
+      body > div {
+        max-width: 500px;
+        background-color: #dfdfdf;
+        position: relative;
+        padding: 10px;
       }
       #host, #msg { width: 8em; }
       #port { width: 3em; }
+      canvas {
+        background-color: #333;
+        position: absolute;
+        right: 10px;
+        top: 10px;
+      }
     </style>
   </head>
   <body>
-    <h2>Client <span id="client_id"></span></h2>
-    <button id="btnJoin">join</button>
-    <label for="host">Host:</label><input type="text" id="host" value="localhost" />
-    <label for="port">Port:</label><input type="text" id="port" value="40401"/>
-    <span id="dbg"></span>
-    <br/>
-    <button id="btnSend">send</button>
-    <label for="msg">Msg:</label><input type="text" id="msg" />|
-    <button id="btnLeft">&lt;</button>
-    <button id="btnRight">&gt;</button>
-
-    <br/>
-    <div id="msgs">...</div>
+    <div>
+      <h2>Client <span id="client_id"></span></h2>
+      <button id="btnJoin">join</button>
+      <label for="host">Host:</label><input type="text" id="host" value="localhost" />
+      <label for="port">Port:</label><input type="text" id="port" value="40401"/>
+      <span id="dbg"></span>
+      <br/>
+      <button id="btnSend">send</button>
+      <label for="msg">Msg:</label><input type="text" id="msg" />|
+      <button id="btnLeft">&lt;</button>
+      <button id="btnRight">&gt;</button>
+      <br/>
+      <canvas width="100" height="100"></canvas>
+      <div id="msgs">...</div>
+    </div>
     <script type="module" src="./client.js"></script>
   </body>
 </html>

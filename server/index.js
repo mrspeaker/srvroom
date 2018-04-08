@@ -1,7 +1,6 @@
 import Server from "../lobby/Server.js";
 import env from "../game/env.js";
 import World from "../game/World.js";
-import Player from "../game/Player.js";
 
 const s = new Server(env.port);
 const rooms = s.rooms;
@@ -32,7 +31,7 @@ class ServerGame {
     this.game = new World();
     this.entities = new Map();
 
-    room.onMessage = this.onMessage.bind(this);
+    room.onMessage = this.onClientMessage.bind(this);
 
     [...room.clients.values()].forEach(c => this.addPlayer(c.id));
 
@@ -49,32 +48,34 @@ class ServerGame {
       return { id: p.id, x: p.pos.x, z: p.pos.z };
     });
   }
+
   addPlayer(id) {
     const { game, entities } = this;
+    // TODO: don't use client_id - have a map of client->player
     const p = game.addEntity(id);
     p.pos.x = (Math.random() * 100) | 0;
     p.pos.z = (Math.random() * 100) | 0;
     entities.set(id, p);
     return p;
   }
-  onMessage(id, msg) {
+
+  onClientMessage(id, msg) {
     const { room, entities } = this;
     if (msg.action === "CHAT") {
       room.broadcast(id, msg.msg);
       return;
     }
-    const c = room.clients.get(id);
-    if (c) {
+    if (msg.action === "INPUT") {
       const p = entities.get(id);
       if (p) {
+        // TODO: add input to list-to-process
         p.pos.x += msg.xo;
       } else {
-        console.error("no player", id);
+        console.error("who is this?", id);
       }
-    } else {
-      console.error("who is this?", id);
     }
   }
+
   tick() {
     const { game, room, entities } = this;
 
@@ -106,36 +107,3 @@ class ServerGame {
     setTimeout(() => this.tick(), 1000 / 10);
   }
 }
-
-/*
-class Input {
-  constructor() {
-    this.xo = 0;
-    this.zo = 0;
-    this.jump = false;
-    this.sequenceNumber = 0;
-  }
-}
-
-class NetworkClient {
-  constructor(entity) {
-    this.entity = entity;
-    this.entities = {};
-    this.pending_input = [];
-  }
-  update() {
-    this.processServerMessages();
-    this.processInputs();
-    this.interpolateEntities();
-  }
-  processServerMessages() {}
-  processInputs() {
-    const { entity } = this;
-    entity.update({
-      x: 0.1,
-      z: 0.1
-    });
-  }
-  interpolateEntities() {}
-}
-*/
