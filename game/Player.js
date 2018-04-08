@@ -10,8 +10,8 @@ class Player {
   }
 
   update(input) {
-    this.x += input.x;
-    this.z += input.z;
+    this.pos.x += input.x;
+    this.pos.z += input.z;
   }
 }
 

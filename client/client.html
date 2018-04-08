@@ -7,16 +7,19 @@
       body {
         font-family: sans-serif;
         background-color: #dfdfdf;
+        font-size: 8pt;
       }
       #host, #msg { width: 8em; }
       #port { width: 3em; }
     </style>
   </head>
   <body>
-    <h2>Client</h2>
+    <h2>Client <span id="client_id"></span></h2>
     <button id="btnJoin">join</button>
     <label for="host">Host:</label><input type="text" id="host" value="localhost" />
-    <label for="port">Port:</label><input type="text" id="port" value="40401"/><br/>
+    <label for="port">Port:</label><input type="text" id="port" value="40401"/>
+    <span id="dbg"></span>
+    <br/>
     <button id="btnSend">send</button>
     <label for="msg">Msg:</label><input type="text" id="msg" />|
     <button id="btnLeft">&lt;</button>

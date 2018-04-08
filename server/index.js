@@ -30,39 +30,42 @@ class ServerGame {
   constructor(room) {
     this.room = room;
     this.game = new World();
+    this.entities = new Map();
 
     room.onMessage = this.onMessage.bind(this);
 
     [...room.clients.values()].forEach(c => this.addPlayer(c.id));
 
     const poss = this.getAllPos();
-    this.game.scene.forEach(p => {
+    this.entities.forEach(p => {
       room.clients.get(p.id).send({ action: "NEW_GAME", pos: poss });
     });
 
     this.tick();
   }
   getAllPos() {
-    return this.game.scene.map(p => {
+    const { entities } = this;
+    return Array.from(entities, ([, p]) => {
       return { id: p.id, x: p.pos.x, z: p.pos.z };
     });
   }
   addPlayer(id) {
-    const { game } = this;
-    const p = new Player(id);
+    const { game, entities } = this;
+    const p = game.addEntity(id);
     p.pos.x = (Math.random() * 100) | 0;
     p.pos.z = (Math.random() * 100) | 0;
-    game.addPlayer(p);
+    entities.set(id, p);
+    return p;
   }
   onMessage(id, msg) {
-    const { room, game } = this;
+    const { room, entities } = this;
     if (msg.action === "CHAT") {
       room.broadcast(id, msg.msg);
       return;
     }
     const c = room.clients.get(id);
     if (c) {
-      const p = game.scene.find(pl => pl.id === id);
+      const p = entities.get(id);
       if (p) {
         p.pos.x += msg.xo;
       } else {
@@ -73,10 +76,14 @@ class ServerGame {
     }
   }
   tick() {
-    const { game, room } = this;
+    const { game, room, entities } = this;
+
+    if (Math.random() < 0.01) {
+      this.addPlayer((Math.random() * 1000) | 0);
+    }
 
     // Fake inputs
-    game.scene.forEach(p => {
+    entities.forEach(p => {
       p.xo = Math.random() * 4 - 2;
       p.zo = Math.random() * 4 - 2;
 
@@ -84,12 +91,9 @@ class ServerGame {
       p.pos.z += p.zo;
     });
 
-    const poss = this.getAllPos(); // Have to get poss before removing
     const dead = game.tick();
-
-    if (Math.random() < 0.01) {
-      this.addPlayer(Math.random() * 1000 | 0);
-    }
+    dead.forEach(d => entities.delete(d));
+    const poss = this.getAllPos();
 
     room.clients.forEach(c => {
       const isDead = dead.indexOf(c.id) >= 0;
@@ -98,10 +102,10 @@ class ServerGame {
         rooms.addToLobby(c);
       }
     });
+
     setTimeout(() => this.tick(), 1000 / 10);
   }
 }
-
 
 /*
 class Input {

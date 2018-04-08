@@ -1,3 +1,4 @@
+import Player from "./Player.js";
 
 class World {
   constructor(seed) {
@@ -6,9 +7,14 @@ class World {
     this.seed = seed;
   }
 
-  addPlayer (p) {
-    this.scene.push(p);
-    return p;
+  addEntity (id) {
+    const e = new Player(id);
+    this.scene.push(e);
+    return e;
+  }
+
+  removeEntity (e) {
+    this.scene = this.scene.filter(ent => e !== ent);
   }
 
   tick() {
