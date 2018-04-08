@@ -4,12 +4,17 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "server": "node index.js",
+    "client": "cd client && npx budo",
+    "start": "npm run server & npm run client"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "esm": "^3.0.14",
     "ws": "^5.1.0"
+  },
+  "devDependencies": {
+    "esm": "^3.0.14",
+    "budo": "^11.2.0"
   }
 }
