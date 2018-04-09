@@ -26,15 +26,16 @@ rooms.onEnterLobby = () => {
 };
 
 class Bot {
-  constructor (player, send) {
+  constructor(player, send) {
     this.player = player;
     this.send = send;
+    player.bot = true;
   }
   update() {
     const xo = (Math.random() * 2 - 1) * 0.2;
     const zo = (Math.random() * 2 - 1) * 0.2;
     const input = { action: "INPUT", xo: xo * 8, zo: zo * 8 };
-    this.send(this.player.id, input);
+    this.send(this.player.id, input, true);
   }
 }
 
@@ -43,39 +44,46 @@ class ServerGame {
     this.room = room;
     this.game = new World();
     this.entities = new Map();
-    this.bots = [];
+    this.clientToEntity = new Map();
+    this.player_id = 1;
     room.onMessage = this.onClientMessage.bind(this);
+    this.bots = [];
 
-    [...room.clients.values()].forEach(c => this.addPlayer(c.id));
-
-    const poss = this.getAllPos();
-    this.entities.forEach(p => {
-      room.clients.get(p.id).send({ action: "NEW_GAME", pos: poss });
+    [...room.clients.values()].forEach(c => {
+      const p = this.addPlayer(c);
+      c.send({ action: "NEW_GAME_INIT", id: p.id, world: room.name });
     });
+
+    room.broadcast({ action: "NEW_GAME", pos: this.getAllPos() });
 
     this.tick();
   }
+
   getAllPos() {
     const { entities } = this;
     return Array.from(entities, ([, p]) => {
-      return { id: p.id, x: p.pos.x, z: p.pos.z };
+      return { id: p.id, x: p.pos.x, z: p.pos.z, bot: !!p.bot };
     });
   }
 
-  addPlayer(id) {
+  addPlayer(client) {
     const { game, entities } = this;
-    // TODO: don't use client_id - have a map of client->player
+    const id = this.player_id++;
     const p = game.addEntity(id);
     p.pos.x = (Math.random() * 100) | 0;
     p.pos.z = (Math.random() * 100) | 0;
     entities.set(id, p);
+    if (client) {
+      this.clientToEntity.set(client.id, p.id);
+    }
     return p;
   }
 
-  onClientMessage(id, msg) {
-    const { room, entities } = this;
+  onClientMessage(client_id, msg, isBot = false) {
+    const { room, entities, clientToEntity } = this;
+    const id = isBot ? client_id : clientToEntity.get(client_id);
     if (msg.action === "CHAT") {
-      room.broadcast(id, msg.msg);
+      room.broadcast({ fromId: id, msg: msg.msg });
       return;
     }
     if (msg.action === "INPUT") {
@@ -90,13 +98,13 @@ class ServerGame {
     }
   }
 
-  addBot () {
-    const p = this.addPlayer((Math.random() * 1000) | 0);
+  addBot() {
+    const p = this.addPlayer();
     this.bots.push(new Bot(p, this.onClientMessage.bind(this)));
   }
 
   tick() {
-    const { game, room, entities, bots } = this;
+    const { game, room, entities, clientToEntity, bots } = this;
 
     if (Math.random() < 0.01) {
       this.addBot();
@@ -113,11 +121,11 @@ class ServerGame {
       // Remove dead bots
       this.bots = this.bots.filter(b => b.player.id !== d);
     });
-    
+
     const poss = this.getAllPos();
 
     room.clients.forEach(c => {
-      const isDead = dead.indexOf(c.id) >= 0;
+      const isDead = dead.indexOf(clientToEntity.get(c.id)) >= 0;
       c.send({ action: "TICK", state: game.state, pos: poss, dead, isDead });
       if (isDead) {
         rooms.addToLobby(c);

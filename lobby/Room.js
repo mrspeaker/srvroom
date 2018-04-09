@@ -30,10 +30,10 @@ class Room {
     clients.delete(client.id);
   }
 
-  broadcast(fromId, msg) {
+  broadcast(msg) {
     const { clients } = this;
     clients.forEach(client => {
-      const open = client.send(`${fromId}: ${msg}`);
+      const open = client.send(msg);
       if (!open) {
         this.leave(client);
       }

@@ -8,12 +8,15 @@ const msg = m =>
   ($("#msgs").innerText = m + "\n" + $("#msgs").innerText.slice(0, 200));
 const dgb = m => ($("#dbg").innerText = m);
 const $id = id => $("#client_id").innerText = id;
+const $player_id = id => $("#player_id").innerText = id;
+const $world_id = id => $("#world_id").innerText = id;
 
 class ClientGame {
   constructor() {
     this.world = null;
     this.renderer = null;
     this.client_id = null;
+    this.player_id = null;
     this.ws = null;
 
     this.pending_inputs = [];
@@ -53,7 +56,10 @@ class ClientGame {
     this.renderer = new Renderer();
     this.entities = new Map();
     this.setPos(data.pos);
-    this.entity = this.entities.get(this.client_id);
+    this.entity = this.entities.get(this.player_id);
+    if (!this.entity) {
+      console.error("uh oh.", this.entities);
+    }
     this.entity.local = true;
     this.tick();
   }
@@ -66,6 +72,11 @@ class ClientGame {
         this.client_id = data.id;
         msg("Joined as " + this.client_id);
         $id(this.client_id);
+        break;
+      case "NEW_GAME_INIT":
+        this.player_id = data.id;
+        $player_id(this.player_id);
+        $world_id(data.world);
         break;
       case "NEW_GAME":
         this.newGame(data);
@@ -96,6 +107,7 @@ class ClientGame {
       let pl = entities.get(p.id);
       if (!pl) {
         pl = world.addEntity(p.id);
+        pl.bot = p.bot;
         entities.set(p.id, pl);
       }
       pl.pos.x = p.x;
@@ -127,7 +139,7 @@ class ClientGame {
   }
 
   processInputs() {
-    const { xo, client_id } = this;
+    const { xo, player_id } = this;
     const input = { action: "INPUT", xo: xo * 8, zo: xo * 8 };
 
     if (!xo) {
@@ -136,7 +148,7 @@ class ClientGame {
     this.xo = 0;
 
     input.input_sequence_number = this.input_sequence_number++;
-    input.entity_id = client_id;
+    input.entity_id = player_id;
     this.send(input);
     this.entity.update(input); // client-side prediction
     //this.pending_inputs.push(input);

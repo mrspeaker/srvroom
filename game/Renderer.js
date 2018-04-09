@@ -15,7 +15,7 @@ class Renderer {
     ctx.fillStyle = "#000";
     ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     scene.forEach(e => {
-      ctx.fillStyle = e.local ? "#e30" : "#ff0";
+      ctx.fillStyle = e.local ? "#e30" : e.bot ? "#0f0" : "#ff0";
       ctx.fillRect(e.pos.x - 3, e.pos.z - 3, 6, 6);
     });
   }
