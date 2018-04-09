@@ -4,7 +4,7 @@ import World from "../game/World.js";
 
 const s = new Server(env.port);
 const rooms = s.rooms;
-const games = [];
+const games = new Map();
 let world_id = 0;
 
 s.onClientConnect = client => {
@@ -21,7 +21,7 @@ rooms.onEnterLobby = () => {
   if (rooms.lobby.count == 2) {
     const room = rooms.add("world" + ++world_id);
     rooms.lobby.clients.forEach(c => room.join(c));
-    games.push(new ServerGame(room));
+    games.set(room.name, new ServerGame(room));
   }
 };
 
@@ -48,6 +48,7 @@ class ServerGame {
     this.player_id = 1;
     room.onMessage = this.onClientMessage.bind(this);
     this.bots = [];
+    this.inputs = [];
 
     [...room.clients.values()].forEach(c => {
       const p = this.addPlayer(c);
@@ -89,47 +90,54 @@ class ServerGame {
   }
 
   onClientMessage(client_id, msg, isBot = false) {
-    const { room, entities, clientToEntity } = this;
+    const { room, clientToEntity } = this;
     const id = isBot ? client_id : clientToEntity.get(client_id);
     if (msg.action === "CHAT") {
       room.broadcast({ fromId: id, msg: msg.msg });
       return;
     }
     if (msg.action === "INPUT") {
-      const p = entities.get(id);
-      if (p) {
-        // TODO: add input to list-to-process
-        p.pos.x += msg.xo;
-        p.pos.z += msg.zo;
-      } else {
-        console.error("who is this?", id);
-      }
+      this.inputs.push({ id, xo: msg.xo, zo: msg.zo });
     }
   }
 
-  addBot() {
+  addBot(name) {
     const p = this.addPlayer();
     this.bots.push(new Bot(p, this.onClientMessage.bind(this)));
+    console.log("ADDED bot", p.id, "to", name);
   }
 
   tick() {
-    const { world, room, entities, clientToEntity, bots } = this;
+    const { world, room, entities, clientToEntity, bots, inputs } = this;
+
+    inputs.forEach(({ id, xo, zo }) => {
+      const p = entities.get(id);
+      if (p) {
+        p.pos.x += xo;
+        p.pos.z += zo;
+      } else {
+        console.error("Entity dead (or unknown):", id);
+      }
+    });
+    this.inputs = [];
 
     if (Math.random() < 0.01) {
-      this.addBot();
+      this.addBot(room.name);
     }
-
-    // TODO: bots should be ticked at client-speed not server-speed
-    bots.forEach(b => {
-      b.update();
-    });
 
     const dead = world.tick();
     dead.forEach(d => {
       entities.delete(d);
       // Remove dead bots
-      this.bots = this.bots.filter(b => b.player.id !== d);
+      this.bots = bots.filter(b => b.player.id !== d);
+      console.log("DEAD", d);
     });
+
+    // TODO: bots should be ticked at client-speed not server-speed
+    this.bots.forEach(b => {
+      b.update();
+    });
+
 
     const poss = this.getAllPos();
 
@@ -141,6 +149,11 @@ class ServerGame {
       }
     });
 
-    setTimeout(() => this.tick(), 1000 / 10);
+    if (entities.size - this.bots.length > 0) {
+      setTimeout(() => this.tick(), 1000 / 10);
+    } else {
+      games.delete(this.room.name);
+      console.log("WORLD OVER", this.room.name, games.size);
+    }
   }
 }

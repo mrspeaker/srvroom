@@ -89,7 +89,8 @@ class ClientGame {
         this.setEntities(data.pos, data.dead);
         if (data.isDead) {
           msg("DEAD");
-          this.world = null;
+          this.world.isDead = true;
+          this.world.deadTime = 1000;
         }
         break;
       default:
@@ -142,6 +143,10 @@ class ClientGame {
     world.tick();
     // Rendering should be handled by game?
     renderer.render(world);
+
+    if (this.isDead && --this.deadTime < 0) {
+      this.world = null;
+    }
 
     dgb(world.scene.length + ":" + this.entities.size);
     setTimeout(() => this.tick(), 1000 / 30);

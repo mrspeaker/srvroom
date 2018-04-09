@@ -11,6 +11,8 @@ class World {
       x: this.rand() * 100,
       y: this.rand() * 100
     }));
+    this.col = this.rand() * 360 | 0;
+    this.isDead = false;
   }
 
   addEntity (id) {

@@ -14,8 +14,8 @@ class Renderer {
     const { ctx } = this;
     ctx.fillStyle = "#000";
     ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-    const { boxes, scene } = world;
-    ctx.fillStyle = "#05f";
+    const { boxes, scene, col } = world;
+    ctx.fillStyle = `hsl(${col}, 50%, 30%)`;
     boxes.forEach(({x, y}) => {
       ctx.fillRect(x, y, 10, 10);
     });
@@ -24,6 +24,11 @@ class Renderer {
       ctx.fillStyle = e.__local ? "#e30" : e.__bot ? "#0f0" : "#ff0";
       ctx.fillRect(e.pos.x - 3, e.pos.z - 3, 6, 6);
     });
+
+    if (world.isDead) {
+      ctx.fillStyle = "#fff";
+      ctx.fillText("dead", 20, 20);
+    }
   }
 }
 
