@@ -42,7 +42,7 @@ class Bot {
 class ServerGame {
   constructor(room) {
     this.room = room;
-    this.world = new World();
+    this.world = new World((Math.random() * 10000) | 0);
     this.entities = new Map();
     this.clientToEntity = new Map();
     this.player_id = 1;
@@ -54,7 +54,11 @@ class ServerGame {
       c.send({ action: "NEW_WORLD_INIT", id: p.id, world: room.name });
     });
 
-    room.broadcast({ action: "NEW_WORLD", pos: this.getAllPos() });
+    room.broadcast({
+      action: "NEW_WORLD",
+      pos: this.getAllPos(),
+      seed: this.world.seed
+    });
 
     this.tick();
   }
@@ -62,7 +66,12 @@ class ServerGame {
   getAllPos() {
     const { entities } = this;
     return Array.from(entities, ([, p]) => {
-      return { id: p.id, x: p.pos.x, z: p.pos.z, bot: !!p.bot };
+      return {
+        id: p.id,
+        x: p.pos.x,
+        z: p.pos.z,
+        bot: !!p.bot
+      };
     });
   }
 

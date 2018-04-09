@@ -52,14 +52,15 @@ class ClientGame {
   }
 
   newWorld(data) {
-    msg("Startin game." + data.pos.map(p => p.id).join(","));
+    const { pos, seed } = data;
+    msg("Startin game." + JSON.stringify(data));
 
-    this.world = new World();
+    this.world = new World(seed);
     this.renderer = new Renderer();
     this.entities = new Map();
 
     // This creates all initial entities
-    this.setEntities(data.pos);
+    this.setEntities(pos);
 
     // Get local entity
     this.entity = this.entities.get(this.player_id);
@@ -140,7 +141,7 @@ class ClientGame {
     this.processInputs();
     world.tick();
     // Rendering should be handled by game?
-    renderer.render(world.scene);
+    renderer.render(world);
 
     dgb(world.scene.length + ":" + this.entities.size);
     setTimeout(() => this.tick(), 1000 / 30);

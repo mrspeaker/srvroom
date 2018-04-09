@@ -1,10 +1,16 @@
 import Player from "./Player.js";
+import { rand } from "./utils.js";
 
 class World {
   constructor(seed) {
     this.state = "INIT";
     this.scene = [];
     this.seed = seed;
+    this.rand = rand(seed);
+    this.boxes = [...Array(10)].map(() => ({
+      x: this.rand() * 100,
+      y: this.rand() * 100
+    }));
   }
 
   addEntity (id) {
