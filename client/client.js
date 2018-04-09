@@ -7,9 +7,9 @@ const $on = (sel, action, f) => $(sel).addEventListener(action, f, false);
 const msg = m =>
   ($("#msgs").innerText = m + "\n" + $("#msgs").innerText.slice(0, 200));
 const dgb = m => ($("#dbg").innerText = m);
-const $id = id => $("#client_id").innerText = id;
-const $player_id = id => $("#player_id").innerText = id;
-const $world_id = id => $("#world_id").innerText = id;
+const $id = id => ($("#client_id").innerText = id);
+const $player_id = id => ($("#player_id").innerText = id);
+const $world_id = id => ($("#world_id").innerText = id);
 
 class ClientGame {
   constructor() {
@@ -19,13 +19,14 @@ class ClientGame {
     this.player_id = null;
     this.ws = null;
 
-    this.pending_inputs = [];
+    //this.pending_inputs = [];
     this.input_sequence_number = 0;
 
     this.entities = new Map();
     this.entity = null;
 
     this.xo = 0;
+    this.zo = 0;
 
     $on("#btnLeft", "click", () => (this.xo = -1));
     $on("#btnRight", "click", () => (this.xo = +1));
@@ -50,18 +51,19 @@ class ClientGame {
     this.ws = ws;
   }
 
-  newGame(data) {
+  newWorld(data) {
     msg("Startin game." + data.pos.map(p => p.id).join(","));
+
     this.world = new World();
     this.renderer = new Renderer();
     this.entities = new Map();
-    this.setPos(data.pos);
+
+    // This creates all initial entities
+    this.setEntities(data.pos);
+
+    // Get local entity
     this.entity = this.entities.get(this.player_id);
-    if (!this.entity) {
-      console.error("uh oh.", this.entities);
-    }
-    this.entity.local = true;
-    this.tick();
+    this.entity.__local = true;
   }
 
   receive(e) {
@@ -70,19 +72,20 @@ class ClientGame {
     switch (action) {
       case "CONNECTED":
         this.client_id = data.id;
-        msg("Joined as " + this.client_id);
+        msg("Connected. Client id " + this.client_id);
         $id(this.client_id);
         break;
-      case "NEW_GAME_INIT":
+      case "NEW_WORLD_INIT":
         this.player_id = data.id;
         $player_id(this.player_id);
         $world_id(data.world);
         break;
-      case "NEW_GAME":
-        this.newGame(data);
+      case "NEW_WORLD":
+        this.newWorld(data);
+        this.tick();
         break;
       case "TICK":
-        this.setPos(data.pos, data.dead);
+        this.setEntities(data.pos, data.dead);
         if (data.isDead) {
           msg("DEAD");
           this.world = null;
@@ -101,17 +104,18 @@ class ClientGame {
     ws.send(JSON.stringify(msg));
   }
 
-  setPos(pos, dead = []) {
+  setEntities(data, dead = []) {
     const { world, entities } = this;
-    pos.forEach(p => {
-      let pl = entities.get(p.id);
-      if (!pl) {
-        pl = world.addEntity(p.id);
-        pl.bot = p.bot;
-        entities.set(p.id, pl);
+    data.forEach(p => {
+      const { id, x, z, bot } = p;
+      let player = entities.get(id);
+      if (!player) {
+        player = world.addEntity(id);
+        entities.set(id, player);
+        player.__bot = bot;
       }
-      pl.pos.x = p.x;
-      pl.pos.z = p.z;
+      player.pos.x = x;
+      player.pos.z = z;
     });
 
     dead.forEach(id => {
@@ -127,25 +131,30 @@ class ClientGame {
       return;
     }
 
-    if (Math.random() < 0.3) {
+    // TODO: setting inputs should be part of the game code not the clientServer.
+    if (Math.random() < 0.5) {
       this.xo = (Math.random() * 2 - 1) * 0.2;
       this.zo = (Math.random() * 2 - 1) * 0.2;
     }
+
     this.processInputs();
     world.tick();
+    // Rendering should be handled by game?
     renderer.render(world.scene);
+
     dgb(world.scene.length + ":" + this.entities.size);
     setTimeout(() => this.tick(), 1000 / 30);
   }
 
   processInputs() {
-    const { xo, player_id } = this;
-    const input = { action: "INPUT", xo: xo * 8, zo: xo * 8 };
-
-    if (!xo) {
+    const { xo, zo, player_id } = this;
+    if (!(xo || zo)) {
       return;
     }
+
+    const input = { action: "INPUT", xo: xo * 8, zo: zo * 8 };
     this.xo = 0;
+    this.zo = 0;
 
     input.input_sequence_number = this.input_sequence_number++;
     input.entity_id = player_id;

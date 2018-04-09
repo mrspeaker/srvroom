@@ -42,7 +42,7 @@ class Bot {
 class ServerGame {
   constructor(room) {
     this.room = room;
-    this.game = new World();
+    this.world = new World();
     this.entities = new Map();
     this.clientToEntity = new Map();
     this.player_id = 1;
@@ -51,10 +51,10 @@ class ServerGame {
 
     [...room.clients.values()].forEach(c => {
       const p = this.addPlayer(c);
-      c.send({ action: "NEW_GAME_INIT", id: p.id, world: room.name });
+      c.send({ action: "NEW_WORLD_INIT", id: p.id, world: room.name });
     });
 
-    room.broadcast({ action: "NEW_GAME", pos: this.getAllPos() });
+    room.broadcast({ action: "NEW_WORLD", pos: this.getAllPos() });
 
     this.tick();
   }
@@ -67,9 +67,9 @@ class ServerGame {
   }
 
   addPlayer(client) {
-    const { game, entities } = this;
+    const { world, entities } = this;
     const id = this.player_id++;
-    const p = game.addEntity(id);
+    const p = world.addEntity(id);
     p.pos.x = (Math.random() * 100) | 0;
     p.pos.z = (Math.random() * 100) | 0;
     entities.set(id, p);
@@ -104,7 +104,7 @@ class ServerGame {
   }
 
   tick() {
-    const { game, room, entities, clientToEntity, bots } = this;
+    const { world, room, entities, clientToEntity, bots } = this;
 
     if (Math.random() < 0.01) {
       this.addBot();
@@ -115,7 +115,7 @@ class ServerGame {
       b.update();
     });
 
-    const dead = game.tick();
+    const dead = world.tick();
     dead.forEach(d => {
       entities.delete(d);
       // Remove dead bots
@@ -126,7 +126,7 @@ class ServerGame {
 
     room.clients.forEach(c => {
       const isDead = dead.indexOf(clientToEntity.get(c.id)) >= 0;
-      c.send({ action: "TICK", state: game.state, pos: poss, dead, isDead });
+      c.send({ action: "TICK", state: world.state, pos: poss, dead, isDead });
       if (isDead) {
         rooms.addToLobby(c);
       }
