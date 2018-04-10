@@ -12,6 +12,7 @@ class ServerGame {
 
     this.inputs = [];
     room.onMessage = this.onClientMessage.bind(this);
+    room.onLeave = this.onClientLeave.bind(this);
     this.onClientLeft = onClientLeft;
     this.onGameOver = onGameOver;
 
@@ -66,6 +67,15 @@ class ServerGame {
     }
   }
 
+  onClientLeave(client) {
+    const { entities, clientToEntity } = this;
+    const pId = clientToEntity.get(client.id);
+    if (pId) {
+      entities.delete(pId);
+      clientToEntity.delete(client.Id);
+    }
+  }
+
   addBot(name) {
     const p = this.addPlayer();
     this.bots.push(new Bot(p, this.onClientMessage.bind(this)));
@@ -110,7 +120,6 @@ class ServerGame {
       const isDead = dead.indexOf(clientToEntity.get(c.id)) >= 0;
       c.send({ action: "TICK", state: world.state, pos: poss, dead, isDead });
       if (isDead) {
-        //rooms.addToLobby(c);
         this.onClientLeft(c);
       }
     });

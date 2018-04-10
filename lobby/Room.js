@@ -26,6 +26,7 @@ class Room {
   leave(client) {
     const { clients, name } = this;
     console.log("leaving", name, client.id);
+    this.onLeave && this.onLeave(client);
     client.room = null;
     clients.delete(client.id);
   }
