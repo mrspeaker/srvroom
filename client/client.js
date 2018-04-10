@@ -26,7 +26,7 @@ class ClientGame {
     this.entity = null;
 
     this.xo = 0;
-    this.zo = 0;
+    this.yo = 0;
 
     $on("#btnLeft", "click", () => (this.xo = -1));
     $on("#btnRight", "click", () => (this.xo = +1));
@@ -109,7 +109,7 @@ class ClientGame {
   setEntities(data, dead = []) {
     const { world, entities } = this;
     data.forEach(p => {
-      const { id, x, z, bot } = p;
+      const { id, x, y, bot } = p;
       let player = entities.get(id);
       if (!player) {
         player = world.addEntity(id);
@@ -117,7 +117,7 @@ class ClientGame {
         player.__bot = bot;
       }
       player.pos.x = x;
-      player.pos.z = z;
+      player.pos.y = y;
     });
 
     dead.forEach(id => {
@@ -136,7 +136,7 @@ class ClientGame {
     // TODO: setting inputs should be part of the game code not the clientServer.
     if (Math.random() < 0.5) {
       this.xo += (Math.random() * 2 - 1) * 0.2;
-      this.zo += (Math.random() * 2 - 1) * 0.2;
+      this.yo += (Math.random() * 2 - 1) * 0.2;
     }
 
     this.processInputs();
@@ -153,14 +153,14 @@ class ClientGame {
   }
 
   processInputs() {
-    const { xo, zo, player_id } = this;
-    if (!(xo || zo)) {
+    const { xo, yo, player_id } = this;
+    if (!(xo || yo)) {
       return;
     }
 
-    const input = { action: "INPUT", xo: xo * 8, zo: zo * 8 };
+    const input = { action: "INPUT", xo: xo * 8, yo: yo * 8 };
     this.xo = 0;
-    this.zo = 0;
+    this.yo = 0;
 
     input.input_sequence_number = this.input_sequence_number++;
     input.entity_id = player_id;

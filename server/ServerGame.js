@@ -36,7 +36,7 @@ class ServerGame {
       return {
         id: p.id,
         x: p.pos.x,
-        z: p.pos.z,
+        y: p.pos.y,
         bot: !!p.bot
       };
     });
@@ -47,7 +47,7 @@ class ServerGame {
     const id = this.player_id++;
     const p = world.addEntity(id);
     p.pos.x = (Math.random() * 100) | 0;
-    p.pos.z = (Math.random() * 100) | 0;
+    p.pos.y = (Math.random() * 100) | 0;
     entities.set(id, p);
     if (client) {
       this.clientToEntity.set(client.id, p.id);
@@ -63,7 +63,7 @@ class ServerGame {
       return;
     }
     if (msg.action === "INPUT") {
-      this.inputs.push({ id, xo: msg.xo, zo: msg.zo });
+      this.inputs.push({ id, xo: msg.xo, yo: msg.yo });
     }
   }
 
@@ -85,11 +85,10 @@ class ServerGame {
   tick() {
     const { world, room, entities, clientToEntity, bots, inputs } = this;
 
-    inputs.forEach(({ id, xo, zo }) => {
+    inputs.forEach(({ id, xo, yo }) => {
       const p = entities.get(id);
       if (p) {
-        p.pos.x += xo;
-        p.pos.z += zo;
+        p.update({xo, yo});
       } else {
         console.error("Entity dead (or unknown):", id);
       }

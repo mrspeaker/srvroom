@@ -9,7 +9,7 @@ class World {
     this.state = "INIT";
     this.scene = [];
     this.col = this.rand() * 360 | 0;
-    this.boxes = [...Array(10)].map(() => ({
+    this.boxes = [...Array(4)].map(() => ({
       x: this.rand() * 100,
       y: this.rand() * 100
     }));
@@ -17,7 +17,7 @@ class World {
   }
 
   addEntity (id) {
-    const e = new Player(id);
+    const e = new Player(id, this);
     this.scene.push(e);
     return e;
   }
@@ -29,7 +29,7 @@ class World {
   tick() {
     const dead = [];
     this.scene = this.scene.filter(p => {
-      if (p.pos.x < 0 || p.pos.x > 100 || p.pos.z < 0 || p.pos.z > 100) {
+      if (p.pos.x < 0 || p.pos.x > 100 || p.pos.y < 0 || p.pos.y > 100) {
         dead.push(p.id);
         return false;
       }

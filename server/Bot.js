@@ -6,8 +6,8 @@ class Bot {
   }
   update() {
     const xo = (Math.random() * 2 - 1) * 0.2;
-    const zo = (Math.random() * 2 - 1) * 0.2;
-    const input = { action: "INPUT", xo: xo * 8, zo: zo * 8 };
+    const yo = (Math.random() * 2 - 1) * 0.2;
+    const input = { action: "INPUT", xo: xo * 8, yo: yo * 8 };
     this.send(this.player.id, input, true);
   }
 }
