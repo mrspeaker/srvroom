@@ -8,7 +8,7 @@ class World {
 
     this.state = "INIT";
     this.scene = [];
-    this.col = this.rand() * 360 | 0;
+    this.col = (this.rand() * 360) | 0;
     this.boxes = [...Array(4)].map(() => ({
       x: this.rand() * 100,
       y: this.rand() * 100

@@ -23,7 +23,7 @@ rooms.onEnterLobby = () => {
 const onClientLeft = client => rooms.addToLobby(client);
 const onGameOver = room => {
   games.delete(room.name);
-  // rooms.delete(room.name) ?
+  // rooms.delete(room.name)?
 };
 const makeRoom = (() => {
   let world_id = 0;

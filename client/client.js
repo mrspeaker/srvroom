@@ -28,8 +28,8 @@ class ClientGame {
     this.xo = 0;
     this.yo = 0;
 
-    $on("#btnLeft", "click", () => (this.xo = -1));
-    $on("#btnRight", "click", () => (this.xo = +1));
+    $on("#btnLeft", "click", () => (this.yo = -3));
+    $on("#btnRight", "click", () => (this.yo = +3));
     $on("#btnSend", "click", () =>
       this.send({ action: "CHAT", msg: $("#msg").value })
     );
@@ -86,6 +86,9 @@ class ClientGame {
         $id(this.client_id);
         break;
       case "NEW_WORLD_INIT":
+        if (this.tickTimer) {
+          clearTimeout(this.tickTimer);
+        }
         this.player_id = data.id;
         $player_id(this.player_id);
         $world_id(data.world);
@@ -99,8 +102,8 @@ class ClientGame {
         if (data.isDead) {
           msg("DEAD");
           this.world.isDead = true;
-          this.world.deadTime = 100;
-          clearTimeout(this.tickTimer);
+          this.deadTime = 100;
+          this.renderer.render(this.world);
         }
         break;
       default:
@@ -145,19 +148,19 @@ class ClientGame {
     dgb((this.ticker()||0).toFixed(2));
     // TODO: setting inputs should be part of the game code not the clientServer.
     if (Math.random() < 0.5) {
-      this.xo += (Math.random() * 2 - 1) * 0.2;
-      this.yo += (Math.random() * 2 - 1) * 0.2;
+      this.xo += (Math.random() * 2 - 1) * 0.5;
+      this.yo += Math.random();
     }
 
     this.processInputs();
     world.tick();
-    // Rendering should be handled by game?
+
     renderer.render(world);
 
-    if (this.isDead && --this.deadTime < 0) {
+    if (this.world.isDead && --this.deadTime < 0) {
       this.world = null;
+      return;
     }
-
     //dgb(world.scene.length + ":" + this.entities.size);
     this.tickTimer = setTimeout(() => this.tick(), 1000 / 30);
   }
@@ -168,7 +171,7 @@ class ClientGame {
       return;
     }
 
-    const input = { action: "INPUT", xo: xo * 8, yo: yo * 8 };
+    const input = { action: "INPUT", xo, yo };
     this.xo = 0;
     this.yo = 0;
 
