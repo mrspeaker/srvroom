@@ -37,6 +37,15 @@ class ClientGame {
     $("#port").value = env.port;
     $("#btnJoin").onclick = () =>
       this.connect($("#host").value, $("#port").value);
+
+    this.ticker = (() => {
+      let ds = [];
+      return () => {
+        const dx = ds.slice(1).map((d, i) => d - ds[i]);
+        ds = [...ds.slice(-30), Date.now()];
+        return dx.reduce((ac, el) => ac + el, 0) / dx.length;
+      };
+    })();
   }
 
   connect(host, port) {
@@ -90,7 +99,8 @@ class ClientGame {
         if (data.isDead) {
           msg("DEAD");
           this.world.isDead = true;
-          this.world.deadTime = 1000;
+          this.world.deadTime = 100;
+          clearTimeout(this.tickTimer);
         }
         break;
       default:
@@ -132,7 +142,7 @@ class ClientGame {
     if (!world) {
       return;
     }
-
+    dgb((this.ticker()||0).toFixed(2));
     // TODO: setting inputs should be part of the game code not the clientServer.
     if (Math.random() < 0.5) {
       this.xo += (Math.random() * 2 - 1) * 0.2;
@@ -148,8 +158,8 @@ class ClientGame {
       this.world = null;
     }
 
-    dgb(world.scene.length + ":" + this.entities.size);
-    setTimeout(() => this.tick(), 1000 / 30);
+    //dgb(world.scene.length + ":" + this.entities.size);
+    this.tickTimer = setTimeout(() => this.tick(), 1000 / 30);
   }
 
   processInputs() {

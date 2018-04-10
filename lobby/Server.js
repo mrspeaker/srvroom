@@ -27,7 +27,6 @@ class Server {
 
   heartbeat() {
     const { clients } = this;
-    console.log("heartbeat");
     clients.forEach(c => {
       const { ws, lastPing, id } = c;
       const time = Date.now() - lastPing;
