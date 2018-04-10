@@ -2,9 +2,8 @@ import Room from "./Room.js";
 
 class Rooms {
   constructor() {
-    this.rooms = {
-      lobby: new Room(Rooms.LOBBY)
-    };
+    this.rooms = new Map();
+    this.rooms.set(Rooms.LOBBY, new Room(Rooms.LOBBY));
   }
 
   get lobby() {
