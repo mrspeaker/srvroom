@@ -135,8 +135,8 @@ class ClientGame {
 
     // TODO: setting inputs should be part of the game code not the clientServer.
     if (Math.random() < 0.5) {
-      this.xo = (Math.random() * 2 - 1) * 0.2;
-      this.zo = (Math.random() * 2 - 1) * 0.2;
+      this.xo += (Math.random() * 2 - 1) * 0.2;
+      this.zo += (Math.random() * 2 - 1) * 0.2;
     }
 
     this.processInputs();

@@ -3,6 +3,9 @@ const rand = s => () => {
   return s - Math.floor(s);
 };
 
+const randSeed = () => Math.random() * 10000;
+
 export {
-  rand
+  rand,
+  randSeed
 };

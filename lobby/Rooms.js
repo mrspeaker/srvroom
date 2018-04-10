@@ -7,14 +7,14 @@ class Rooms {
   }
 
   get lobby() {
-    return this.rooms.lobby;
+    return this.rooms.get(Rooms.LOBBY);
   }
 
   addToLobby(client) {
     if (client.room) {
       client.room.leave(client);
     }
-    this.rooms.lobby.join(client);
+    this.rooms.get(Rooms.LOBBY).join(client);
     this.onEnterLobby && this.onEnterLobby(client);
   }
 
@@ -25,10 +25,10 @@ class Rooms {
   }
 
   remove(name) {
-    const room = this.rooms[name];
+    const room = this.rooms.get(name);
     if (!room || name === Rooms.LOBBY) return;
     room.clients.forEach(c => this.addToLobby(c));
-    delete this.rooms[room];
+    this.rooms.delete(name);
   }
 }
 Rooms.LOBBY = "lobby";

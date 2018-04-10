@@ -1,17 +1,18 @@
 import Player from "./Player.js";
-import { rand } from "./utils.js";
+import { rand, randSeed } from "./utils.js";
 
 class World {
-  constructor(seed) {
-    this.state = "INIT";
-    this.scene = [];
+  constructor(seed = randSeed()) {
     this.seed = seed;
     this.rand = rand(seed);
+
+    this.state = "INIT";
+    this.scene = [];
+    this.col = this.rand() * 360 | 0;
     this.boxes = [...Array(10)].map(() => ({
       x: this.rand() * 100,
       y: this.rand() * 100
     }));
-    this.col = this.rand() * 360 | 0;
     this.isDead = false;
   }
 

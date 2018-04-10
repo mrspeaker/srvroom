@@ -4,13 +4,13 @@ import Bot from "./Bot.js";
 class ServerGame {
   constructor(room, onClientLeft, onGameOver) {
     this.room = room;
-    this.world = new World((Math.random() * 10000) | 0);
+    this.world = new World();
     this.entities = new Map();
     this.clientToEntity = new Map();
     this.player_id = 1;
     this.bots = [];
-    this.inputs = [];
 
+    this.inputs = [];
     room.onMessage = this.onClientMessage.bind(this);
     this.onClientLeft = onClientLeft;
     this.onGameOver = onGameOver;
