@@ -9,7 +9,7 @@ class Player {
     this.h = 6;
     this.world = world;
     this.angle = 0;
-    this.speed = 1;
+    this.speed = 2;
   }
 
   update(input) {

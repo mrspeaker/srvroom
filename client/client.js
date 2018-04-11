@@ -145,7 +145,6 @@ class ClientGame {
     if (!world) {
       return;
     }
-    dgb((this.ticker()||0).toFixed(2));
     // TODO: setting inputs should be part of the game code not the clientServer.
     if (Math.random() < 0.5) {
       this.xo += (Math.random() * 2 - 1) * 0.5;
@@ -154,14 +153,15 @@ class ClientGame {
 
     this.processInputs();
     world.tick();
-
     renderer.render(world);
 
-    if (this.world.isDead && --this.deadTime < 0) {
+    if (world.isDead && --this.deadTime < 0) {
       this.world = null;
       return;
     }
-    //dgb(world.scene.length + ":" + this.entities.size);
+
+    // dgb((this.ticker()||0).toFixed(2));
+    dgb(world.scene.length + ":" + this.entities.size);
     this.tickTimer = setTimeout(() => this.tick(), 1000 / 30);
   }
 

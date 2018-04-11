@@ -22,7 +22,7 @@ class Renderer {
 
     scene.forEach(e => {
       ctx.fillStyle = e.__local ? "#e30" : e.__bot ? "#0f0" : "#ff0";
-      ctx.fillRect(e.pos.x - 3, e.pos.y - 3, 6, 6);
+      ctx.fillRect(e.pos.x, e.pos.y, 6, 6);
     });
 
     if (world.isDead) {
