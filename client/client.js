@@ -19,7 +19,7 @@ class ClientGame {
     this.player_id = null;
     this.ws = null;
 
-    //this.pending_inputs = [];
+    this.pending_inputs = [];
     this.input_sequence_number = 0;
 
     this.entities = new Map();
@@ -63,6 +63,7 @@ class ClientGame {
   newWorld(data) {
     const { pos, seed } = data;
     msg("Startin game." + JSON.stringify(data));
+    this.start = Date.now();
 
     this.world = new World(seed);
     this.renderer = new Renderer();
@@ -89,6 +90,8 @@ class ClientGame {
         if (this.tickTimer) {
           clearTimeout(this.tickTimer);
         }
+        this.pending_inputs = [];
+        this.input_sequence_number = 0;
         this.player_id = data.id;
         $player_id(this.player_id);
         $world_id(data.world);
@@ -98,6 +101,7 @@ class ClientGame {
         this.tick();
         break;
       case "TICK":
+        this.lastTick = Date.now();
         this.setEntities(data.pos, data.dead);
         if (data.isDead) {
           msg("DEAD");
@@ -105,6 +109,14 @@ class ClientGame {
           this.deadTime = 100;
           this.renderer.render(this.world);
         }
+        $world_id(data.lseq);
+        $player_id(this.pending_inputs.length);
+
+        // Apply pending inputs to player
+        this.pending_inputs = this.pending_inputs.filter(i => {
+          return i.seq > data.lseq;
+        });
+        this.pending_inputs.map(i => this.entity.update(i));
         break;
       default:
         msg(e.data);
@@ -145,13 +157,14 @@ class ClientGame {
     if (!world) {
       return;
     }
-    // TODO: setting inputs should be part of the game code not the clientServer.
-    if (Math.random() < 0.5) {
-      this.xo += (Math.random() * 2 - 1) * 0.5;
-      this.yo += Math.random();
-    }
 
-    this.processInputs();
+    if (!world.isDead) {
+      if (Math.random() < 0.5) {
+        this.xo += (Math.random() * 2 - 1) * 0.5;
+        this.yo += Math.random();
+      }
+      this.processInputs();
+    }
     world.tick();
     renderer.render(world);
 
@@ -160,8 +173,19 @@ class ClientGame {
       return;
     }
 
+    // TODO: Interpolate other entitites
+    // ...
+
     // dgb((this.ticker()||0).toFixed(2));
-    dgb(world.scene.length + ":" + this.entities.size);
+    dgb(
+      world.scene.length +
+        ":" +
+        this.entities.size +
+        " __ " +
+        this.entity.pos.x.toFixed(0) +
+        ":" +
+        this.entity.pos.y.toFixed(0) + " __ " + ((this.lastTick - this.start) / 1000).toFixed(0)
+    );
     this.tickTimer = setTimeout(() => this.tick(), 1000 / 30);
   }
 
@@ -171,15 +195,19 @@ class ClientGame {
       return;
     }
 
-    const input = { action: "INPUT", xo, yo };
+    const input = {
+      action: "INPUT",
+      xo,
+      yo,
+      seq: this.input_sequence_number++,
+      entity_id: player_id
+    };
     this.xo = 0;
     this.yo = 0;
 
-    input.input_sequence_number = this.input_sequence_number++;
-    input.entity_id = player_id;
     this.send(input);
-    this.entity.update(input); // client-side prediction
-    //this.pending_inputs.push(input);
+    this.pending_inputs.push(input);
+    this.entity.update(input);
   }
 }
 

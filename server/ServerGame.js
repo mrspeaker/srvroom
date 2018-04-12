@@ -7,6 +7,8 @@ class ServerGame {
     this.world = new World();
     this.entities = new Map();
     this.clientToEntity = new Map();
+    this.lastInput = new Map();
+
     this.player_id = 1;
     this.bots = [];
 
@@ -63,7 +65,7 @@ class ServerGame {
       return;
     }
     if (msg.action === "INPUT") {
-      this.inputs.push({ id, xo: msg.xo, yo: msg.yo });
+      this.inputs.push({ id, xo: msg.xo, yo: msg.yo, seq: msg.seq, isBot });
     }
   }
 
@@ -79,18 +81,21 @@ class ServerGame {
   addBot(name) {
     const p = this.addPlayer();
     this.bots.push(new Bot(p, this.onClientMessage.bind(this)));
-    console.log("ADDED bot", p.id, "to", name);
+    //console.log("ADDED bot", p.id, "to", name);
   }
 
   tick() {
     const { world, room, entities, clientToEntity, bots, inputs } = this;
 
-    inputs.forEach(({ id, xo, yo }) => {
+    inputs.forEach(({ id, xo, yo, isBot, seq }) => {
       const p = entities.get(id);
       if (p) {
-        p.update({xo, yo});
+        p.update({ xo, yo });
       } else {
         console.error("Entity dead (or unknown):", id);
+      }
+      if (!isBot) {
+        this.lastInput.set(id, seq);
       }
     });
     this.inputs = [];
@@ -104,7 +109,6 @@ class ServerGame {
       entities.delete(d);
       // Remove dead bots
       this.bots = bots.filter(b => b.player.id !== d);
-      console.log("DEAD", d);
     });
 
     // TODO: bots should be ticked at client-speed not server-speed
@@ -112,12 +116,19 @@ class ServerGame {
       b.update();
     });
 
-
     const poss = this.getAllPos();
 
     room.clients.forEach(c => {
-      const isDead = dead.indexOf(clientToEntity.get(c.id)) >= 0;
-      c.send({ action: "TICK", state: world.state, pos: poss, dead, isDead });
+      const pid = clientToEntity.get(c.id);
+      const isDead = dead.indexOf(pid) >= 0;
+      c.send({
+        action: "TICK",
+        state: world.state,
+        pos: poss,
+        dead,
+        isDead,
+        lseq: this.lastInput.get(pid)
+      });
       if (isDead) {
         this.onClientLeft(c);
       }
