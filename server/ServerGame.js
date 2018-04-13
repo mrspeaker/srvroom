@@ -20,13 +20,14 @@ class ServerGame {
 
     [...room.clients.values()].forEach(c => {
       const p = this.addPlayer(c);
-      c.send({ action: "NEW_WORLD_INIT", id: p.id, world: room.name });
-    });
-
-    room.broadcast({
-      action: "NEW_WORLD",
-      pos: this.getAllPos(),
-      seed: this.world.seed
+      c.send({
+        action: "NEW_WORLD",
+        id: p.id,
+        world: room.name,
+        seed: this.world.seed,
+        x: p.pos.x,
+        y: p.pos.y
+      });
     });
 
     this.tick();
@@ -81,7 +82,7 @@ class ServerGame {
   addBot(name) {
     const p = this.addPlayer();
     this.bots.push(new Bot(p, this.onClientMessage.bind(this)));
-    //console.log("ADDED bot", p.id, "to", name);
+    console.log("ADDED bot", p.id, "to", name);
   }
 
   tick() {
