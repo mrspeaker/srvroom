@@ -4,31 +4,25 @@ import Bot from "./Bot.js";
 class ServerGame {
   constructor(room, onClientLeft, onGameOver) {
     this.room = room;
+
     this.world = new World();
-    this.entities = new Map();
-    this.clientToEntity = new Map();
-    this.lastInput = new Map();
+    // Should this be a proxy instead of actual entity?
+    // like, a proxy of only network-enabled properties
+    this.entities = new Map(); // id -> gameEntity
+    this.bots = new Map(); // id -> gameentity
 
-    this.player_id = 1;
-    this.bots = [];
+    this.clientToEntity = new Map(); // clientId -> id
+    this.entityLastSeqNum = new Map(); // id -> seqNumm
+    this.pending_inputs = []; // Array<Inputs>
 
-    this.inputs = [];
+    this.entity_id = 0;
+
     room.onMessage = this.onClientMessage.bind(this);
     room.onLeave = this.onClientLeave.bind(this);
     this.onClientLeft = onClientLeft;
     this.onGameOver = onGameOver;
 
-    [...room.clients.values()].forEach(c => {
-      const p = this.addPlayer(c);
-      c.send({
-        action: "NEW_WORLD",
-        id: p.id,
-        world: room.name,
-        seed: this.world.seed,
-        x: p.pos.x,
-        y: p.pos.y
-      });
-    });
+    [...room.clients.values()].forEach(c => this.addClient(c));
 
     this.tick();
   }
@@ -45,9 +39,22 @@ class ServerGame {
     });
   }
 
+  addClient(client) {
+    const { room, world } = this;
+    const p = this.addPlayer(client);
+    client.send({
+      action: "NEW_WORLD",
+      id: p.id,
+      world: room.name,
+      seed: world.seed,
+      x: p.pos.x,
+      y: p.pos.y
+    });
+  }
+
   addPlayer(client) {
     const { world, entities } = this;
-    const id = this.player_id++;
+    const id = ++this.entity_id;
     const p = world.addEntity(id);
     p.pos.x = (Math.random() * 100) | 0;
     p.pos.y = (Math.random() * 100) | 0;
@@ -66,7 +73,7 @@ class ServerGame {
       return;
     }
     if (msg.action === "INPUT") {
-      this.inputs.push({ id, xo: msg.xo, yo: msg.yo, seq: msg.seq, isBot });
+      this.pending_inputs.push({ id, xo: msg.xo, yo: msg.yo, seq: msg.seq, isBot });
     }
   }
 
@@ -81,14 +88,15 @@ class ServerGame {
 
   addBot(name) {
     const p = this.addPlayer();
-    this.bots.push(new Bot(p, this.onClientMessage.bind(this)));
+    const b = new Bot(p, this.onClientMessage.bind(this));
+    this.bots.set(b.id, b);
     console.log("ADDED bot", p.id, "to", name);
   }
 
   tick() {
-    const { world, room, entities, clientToEntity, bots, inputs } = this;
+    const { world, room, entities, clientToEntity, bots, pending_inputs } = this;
 
-    inputs.forEach(({ id, xo, yo, isBot, seq }) => {
+    pending_inputs.forEach(({ id, xo, yo, isBot, seq }) => {
       const p = entities.get(id);
       if (p) {
         p.update({ xo, yo });
@@ -96,10 +104,10 @@ class ServerGame {
         console.error("Entity dead (or unknown):", id);
       }
       if (!isBot) {
-        this.lastInput.set(id, seq);
+        this.entityLastSeqNum.set(id, seq);
       }
     });
-    this.inputs = [];
+    this.pending_inputs = [];
 
     if (Math.random() < 0.01) {
       this.addBot(room.name);
@@ -107,13 +115,14 @@ class ServerGame {
 
     const dead = world.tick();
     dead.forEach(d => {
+      // TODO: better sepeartion of clients and bots
       entities.delete(d);
       // Remove dead bots
-      this.bots = bots.filter(b => b.player.id !== d);
+      bots.delete(d);
     });
 
     // TODO: bots should be ticked at client-speed not server-speed
-    this.bots.forEach(b => {
+    bots.forEach(b => {
       b.update();
     });
 
@@ -128,14 +137,14 @@ class ServerGame {
         pos: poss,
         dead,
         isDead,
-        lseq: this.lastInput.get(pid)
+        lseq: this.entityLastSeqNum.get(pid)
       });
       if (isDead) {
         this.onClientLeft(c);
       }
     });
 
-    if (entities.size - this.bots.length > 0) {
+    if (entities.size - bots.size > 0) {
       setTimeout(() => this.tick(), 1000 / 10);
     } else {
       this.onGameOver(this.room);
