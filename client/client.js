@@ -26,12 +26,12 @@ class ClientGame {
     this.entity = null;
 
     this.xo = 0;
-    this.yo = 0;
+    this.yo = 0.15;
     this.lastX = 0;
     this.lastY = 0;
 
-    $on("#btnLeft", "click", () => (this.yo = -3));
-    $on("#btnRight", "click", () => (this.yo = +3));
+    $on("#btnLeft", "click", () => (this.yo = -1));
+    $on("#btnRight", "click", () => (this.yo = +1));
     $on("#btnSend", "click", () =>
       this.send({ action: "CHAT", msg: $("#msg").value })
     );
@@ -109,6 +109,7 @@ class ClientGame {
       case "TICK":
         this.lastTick = Date.now();
         this.setEntities(data.pos, data.dead);
+        $player_id(this.pending_inputs.length);
         if (data.isDead) {
           this.die();
         }
@@ -116,9 +117,9 @@ class ClientGame {
         // Apply pending inputs to player
         this.pending_inputs = this.pending_inputs.filter(i => {
           if (i.seq > data.lseq) {
-            this.entity.update(i);
             return true;
           }
+          this.entity.update(i);
           return false;
         });
         break;
@@ -138,26 +139,27 @@ class ClientGame {
   setEntities(data, dead = []) {
     const { world, entities } = this;
     data.forEach(p => {
-      const { id, x, y, bot } = p;
-      let player = entities.get(id);
-      if (!player) {
-        // new player
-        player = world.addEntity(id);
-        entities.set(id, player);
-        player.__bot = bot;
-        player.pos.x = x;
-        player.pos.y = y;
-        player.position_buffer = [];
-      } else if (player === this.entity) {
-        // Local player, just set it.
+      const { id, x, y, angle, bot } = p;
+      let entity = entities.get(id);
+      if (!entity) {
+        // new entity
+        entity = world.addEntity(id);
+        entities.set(id, entity);
+        entity.__bot = bot;
+        entity.pos.x = x;
+        entity.pos.y = y;
+        entity.position_buffer = [];
+      } else if (entity === this.entity) {
+        // Local entity, just set it.
         this.lastX = x;
         this.lastY = y;
-        player.pos.x = x;
-        player.pos.y = y;
+        entity.pos.x = x;
+        entity.pos.y = y;
       } else {
         // Add it to the position buffer for interpolation
-        player.position_buffer.push([Date.now(), {x, y}]);
+        entity.position_buffer.push([Date.now(), { x, y }]);
       }
+      entity.angle = angle;
     });
 
     dead.forEach(id => {
@@ -174,10 +176,12 @@ class ClientGame {
     }
 
     if (!world.isDead) {
-      if (Math.random() < 0.5) {
-        this.xo += (Math.random() * 2 - 1) * 0.5;
-        this.yo += Math.random();
+      if (Math.random() < 0.03) {
+        //  this.yo = Math.random() * 0.3 + 0.1;
+        this.xo = 0;
       }
+      this.xo += (Math.random() * 2 - 1) * 0.01;
+
       this.processInputs();
     }
     this.interpolateEntities();
@@ -209,7 +213,6 @@ class ClientGame {
     if (!(xo || yo)) {
       return;
     }
-
     const input = {
       action: "INPUT",
       xo,
@@ -217,8 +220,6 @@ class ClientGame {
       seq: this.input_sequence_number++,
       entity_id: player_id
     };
-    this.xo = 0;
-    this.yo = 0;
 
     this.pending_inputs.push(input);
     this.send(input);
@@ -253,8 +254,10 @@ class ClientGame {
         var t1 = buffer[1][0];
 
         // lerp
-        entity.pos.x = pos0.x + (pos1.x - pos0.x) * (render_timestamp - t0) / (t1 - t0);
-        entity.pos.y = pos0.y + (pos1.y - pos0.y) * (render_timestamp - t0) / (t1 - t0);
+        entity.pos.x =
+          pos0.x + (pos1.x - pos0.x) * (render_timestamp - t0) / (t1 - t0);
+        entity.pos.y =
+          pos0.y + (pos1.y - pos0.y) * (render_timestamp - t0) / (t1 - t0);
       }
     });
   }

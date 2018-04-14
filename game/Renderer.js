@@ -17,12 +17,12 @@ class Renderer {
     const { boxes, scene, col } = world;
     ctx.fillStyle = `hsl(${col}, 50%, 30%)`;
     boxes.forEach(({x, y}) => {
-      ctx.fillRect(x, y, 10, 10);
+      ctx.fillRect(x, y, 8, 8);
     });
 
     scene.forEach(e => {
       ctx.fillStyle = e.__local ? "#e30" : e.__bot ? "#0f0" : "#ff0";
-      ctx.fillRect(e.pos.x, e.pos.y, 6, 6);
+      ctx.fillRect(e.pos.x, e.pos.y, 3, 3);
     });
 
     if (world.isDead) {

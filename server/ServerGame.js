@@ -3,15 +3,14 @@ import Bot from "./Bot.js";
 
 class ServerGame {
   constructor(room, onClientLeft, onGameOver) {
-    this.room = room;
-
+    this.room = room; // Net
     this.world = new World(); // Game
 
     // Should this be a proxy instead of actual entity?
     // like, a proxy of only network-enabled properties
     // atm it's a mix of Net AND Game
     this.entities = new Map(); // id -> gameEntity
-    this.botEntities = new Map(); // id -> gameentity
+    this.botEntities = new Map(); // id -> bot gameentity
     this.entityId = 0;
 
     this.clientToEntity = new Map(); // clientId -> id // Net
@@ -28,16 +27,14 @@ class ServerGame {
     this.tick();
   }
 
-  getAllPos() {
-    const { entities } = this;
-    return Array.from(entities, ([, p]) => {
-      return {
-        id: p.id,
-        x: p.pos.x,
-        y: p.pos.y,
-        bot: !!p.bot
-      };
-    });
+  addEntity() {
+    const { world, entities } = this;
+    const id = ++this.entityId;
+    const p = world.addEntity(id);
+    p.pos.x = (Math.random() * 100) | 0;
+    p.pos.y = (Math.random() * 100) | 0;
+    entities.set(id, p);
+    return p;
   }
 
   addClient(client) {
@@ -54,21 +51,24 @@ class ServerGame {
     });
   }
 
-  addEntity() {
-    const { world, entities } = this;
-    const id = ++this.entityId;
-    const p = world.addEntity(id);
-    p.pos.x = (Math.random() * 100) | 0;
-    p.pos.y = (Math.random() * 100) | 0;
-    entities.set(id, p);
-    return p;
-  }
-
   addBot(name) {
     const { botEntities } = this;
     const b = new Bot(this.addEntity(), this.onClientMessage.bind(this));
     botEntities.set(b.id, b);
     console.log("ADDED bot", b.id, "to", name);
+  }
+
+  getAllPos() {
+    const { entities } = this;
+    return Array.from(entities, ([, p]) => {
+      return {
+        id: p.id,
+        x: p.pos.x,
+        y: p.pos.y,
+        angle: p.angle,
+        bot: !!p.bot
+      };
+    });
   }
 
   onClientMessage(client_id, msg, isBot = false) {
@@ -108,6 +108,8 @@ class ServerGame {
       botEntities,
       pendingInputs
     } = this;
+
+    // TODO: figure out what is Game and what is Net.
 
     pendingInputs.forEach(({ id, xo, yo, isBot, seq }) => {
       const p = entities.get(id);
