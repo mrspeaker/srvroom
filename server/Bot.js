@@ -1,5 +1,6 @@
 class Bot {
   constructor(player, send) {
+    this.id = player.id;
     this.player = player;
     this.send = send;
     player.bot = true;
