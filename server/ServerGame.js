@@ -31,10 +31,11 @@ class ServerGame {
     this.tick();
   }
 
-  addEntity() {
+  addEntity(color = "yellow") {
     const { world, entities } = this;
     const id = ++this.entityId;
     const p = world.addEntity(id);
+    p.color = color;
     p.pos.x = (Math.random() * 100) | 0;
     p.pos.y = (Math.random() * 100) | 0;
     entities.set(id, p);
@@ -57,7 +58,7 @@ class ServerGame {
 
   addBot(name) {
     const { botEntities } = this;
-    const b = new Bot(this.addEntity(), this.onClientMessage.bind(this));
+    const b = new Bot(this.addEntity("green"), this.onClientMessage.bind(this));
     botEntities.set(b.id, b);
     console.log("ADDED bot", b.id, "to", name);
   }
@@ -147,10 +148,15 @@ class ServerGame {
         }
         break;
       case "WORLDOVER":
-        console.log("WORLD OVER", this.room.name);
+        room.clients.forEach(c => {
+          c.send({
+            action: "TICK",
+            state: state.state
+          });
+        });
         this.onGameOver(this.room);
-        state.state = "DEAD";
         room.clients.forEach(c => this.onClientLeft(c));
+        state.state = "DEAD";
         break;
       case "DEAD":
         break;

@@ -14,12 +14,7 @@ server.onClientConnect = client =>
     })
   );
 
-rooms.onEnterLobby = c => {
-  c.ws.send(
-    JSON.stringify({
-      action: "LOBBY"
-    })
-  );
+rooms.onEnterLobby = () => {
   if (rooms.lobby.count >= 3) {
     addGame(rooms.lobby.clients, makeRoom());
   }

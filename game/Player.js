@@ -1,5 +1,5 @@
 class Player {
-  constructor(id, world) {
+  constructor(id, world, color = "yellow") {
     this.id = id;
     this.pos = {
       x: 0,
@@ -10,6 +10,7 @@ class Player {
     this.world = world;
     this.angle = 0;
     this.speed = 2;
+    this.color = color;
   }
 
   update(input) {

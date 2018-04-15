@@ -91,9 +91,10 @@ class ClientGame {
         msg("Connected. Client id " + this.client_id);
         $id(this.client_id);
         break;
-      case "LOBBY":
-        $world_id("LOBBY");
+      case "JOINED_ROOM":
+        $world_id(data.data);
         break;
+
       case "NEW_WORLD":
         if (this.tickTimer) {
           clearTimeout(this.tickTimer);
@@ -149,6 +150,11 @@ class ClientGame {
         break;
       case "GAMEOVER":
         this.world.state = "GAMEOVER" + data.time;
+        break;
+
+      case "WORLDOVER":
+        this.world = null;
+        this.renderer.clear();
         break;
     }
   }

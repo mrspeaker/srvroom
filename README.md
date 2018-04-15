@@ -1,4 +1,4 @@
-Thinking out loud about an authoritative server implementation
+Thinking out loud about an authoritative server implementation. The idea is to make a reusable API for integrating in any game, requiring the minimum amount of changes to the game code itself. Need to figure out the minimum set of rules to make this work.
 
 `npm start`
 

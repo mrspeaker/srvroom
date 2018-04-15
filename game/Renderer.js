@@ -16,7 +16,7 @@ class Renderer {
     ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     const { boxes, scene, col } = world;
     ctx.fillStyle = `hsl(${col}, 50%, 30%)`;
-    boxes.forEach(({x, y}) => {
+    boxes.forEach(({ x, y }) => {
       ctx.fillRect(x, y, 8, 8);
     });
 
@@ -29,6 +29,12 @@ class Renderer {
       ctx.fillStyle = "#fff";
       ctx.fillText(world.state, 20, 20);
     }
+  }
+
+  clear() {
+    const { ctx } = this;
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
   }
 }
 
