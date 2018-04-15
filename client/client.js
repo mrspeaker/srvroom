@@ -25,12 +25,18 @@ class ClientGame {
     this.entities = new Map();
     this.entity = null;
 
+    // TODO: should be generic syncable "inputs"
     this.xo = 0;
     this.yo = 0.15;
     this.lastX = 0;
     this.lastY = 0;
 
-    this.isDead = false; // TODO: formalize game state
+    this.state = {
+      isDead: false,
+      entity: null,
+      player_id: null,
+      state: "INIT"
+    };
 
     $on("#btnLeft", "click", () => (this.yo = -1));
     $on("#btnRight", "click", () => (this.yo = +1));
@@ -70,16 +76,19 @@ class ClientGame {
     this.start = Date.now();
 
     this.world = new World(seed);
-    this.world.state = "INIT"; // TODO: nope. proxy non-shared state
     this.renderer = new Renderer();
     this.entities = new Map();
 
     this.pending_inputs = [];
     this.input_sequence_number = 0;
     this.setEntities([{ id: data.id, x: data.x, y: data.y, bot: false }]);
-    // Get local entity
     this.entity = this.entities.get(this.player_id);
-    this.entity.__local = true;
+    this.state = {
+      isDead: false,
+      entity: this.entity,
+      player_id: this.player_id,
+      state: "INIT"
+    };
   }
 
   receive(e) {
@@ -100,7 +109,7 @@ class ClientGame {
           clearTimeout(this.tickTimer);
         }
         this.player_id = data.id;
-        this.isDead = false;
+        this.state.isDead = false;
         $player_id(this.player_id);
         $world_id(data.world);
         this.newWorld(data);
@@ -125,18 +134,19 @@ class ClientGame {
   }
 
   onReceiveTick(data) {
+    const { state } = this;
     switch (data.state) {
       case "READY":
-        this.world.state = "READY " + data.time;
+        state.state = "READY " + data.time;
         break;
       case "PLAY":
         this.lastTick = Date.now();
-        this.world.state = "";
+        state.state = "";
         this.setEntities(data.pos, data.dead);
         $player_id(this.pending_inputs.length);
         if (data.isDead) {
-          this.world.state = "DEAD";
-          this.isDead = true;
+          state.state = "DEAD";
+          state.isDead = true;
         }
 
         // Apply pending inputs to player
@@ -149,7 +159,7 @@ class ClientGame {
         });
         break;
       case "GAMEOVER":
-        this.world.state = "GAMEOVER" + data.time;
+        state.state = "GAMEOVER" + data.time;
         break;
 
       case "WORLDOVER":
@@ -193,12 +203,12 @@ class ClientGame {
   }
 
   tick() {
-    const { world, renderer } = this;
+    const { world, renderer, state } = this;
     if (!world) {
       return;
     }
 
-    if (!this.isDead) {
+    if (!state.isDead) {
       if (Math.random() < 0.03) {
         //  this.yo = Math.random() * 0.3 + 0.1;
         this.xo = 0;
@@ -210,7 +220,7 @@ class ClientGame {
     this.interpolateEntities();
 
     world.tick();
-    renderer.render(world);
+    renderer.render(world, state);
 
     dgb(
       world.scene.length +

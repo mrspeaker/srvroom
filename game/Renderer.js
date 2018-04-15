@@ -10,7 +10,7 @@ class Renderer {
     this.ctx = c.getContext("2d");
   }
 
-  render(world) {
+  render(world, state) {
     const { ctx } = this;
     ctx.fillStyle = "#000";
     ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
@@ -21,13 +21,13 @@ class Renderer {
     });
 
     scene.forEach(e => {
-      ctx.fillStyle = e.__local ? "#e30" : e.__bot ? "#0f0" : "#ff0";
+      ctx.fillStyle = e === state.entity ? "#e30" : e.__bot ? "#0f0" : "#ff0";
       ctx.fillRect(e.pos.x, e.pos.y, 3, 3);
     });
 
-    if (world.state) {
+    if (state.state) {
       ctx.fillStyle = "#fff";
-      ctx.fillText(world.state, 20, 20);
+      ctx.fillText(state.state, 20, 20);
     }
   }
 
