@@ -104,10 +104,14 @@ class ServerGame {
 
   tick() {
     const { entities, botEntities, state, room } = this;
+    /*
+      TODO: tick could be split into two parts: "common" to all games
+      and game specific states
+    */
 
     switch (state.state) {
       case "INIT":
-        this.readyTime = Date.now() + 2000;
+        state.time = Date.now() + 2000;
         state.state = "READY";
         break;
       case "READY":
@@ -115,10 +119,10 @@ class ServerGame {
           c.send({
             action: "TICK",
             state: state.state,
-            time: this.readyTime - Date.now()
+            time: state.time - Date.now()
           });
         });
-        if (Date.now() >= this.readyTime) {
+        if (Date.now() >= state.time) {
           this.pendingInputs = [];
           state.state = "PLAY";
         }
@@ -143,8 +147,8 @@ class ServerGame {
         }
         break;
       case "WORLDOVER":
-        this.onGameOver(this.room);
         console.log("WORLD OVER", this.room.name);
+        this.onGameOver(this.room);
         state.state = "DEAD";
         room.clients.forEach(c => this.onClientLeft(c));
         break;
@@ -166,7 +170,8 @@ class ServerGame {
       clientToEntity,
       clientLastSeqNum,
       botEntities,
-      pendingInputs
+      pendingInputs,
+      state
     } = this;
 
     // TODO: figure out what is Game and what is Net.
@@ -194,20 +199,18 @@ class ServerGame {
       botEntities.delete(d);
     });
 
-    // TODO: bots should be ticked at client-speed not server-speed
+    // TODO: bots should be ticked at client-speed not server-speed?
     botEntities.forEach(b => {
       b.update();
     });
 
-    // TODO: messages that come from the Game could be abstracted
-    const poss = this.getAllPos();
     room.clients.forEach(c => {
       const pid = clientToEntity.get(c.id);
       const isDead = dead.indexOf(pid) >= 0;
       c.send({
         action: "TICK",
-        state: this.state.state,
-        pos: poss,
+        state: state.state,
+        pos: this.getAllPos(),
         dead,
         isDead,
         lseq: clientLastSeqNum.get(pid)

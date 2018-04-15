@@ -30,6 +30,8 @@ class ClientGame {
     this.lastX = 0;
     this.lastY = 0;
 
+    this.isDead = false; // TODO: formalize game state
+
     $on("#btnLeft", "click", () => (this.yo = -1));
     $on("#btnRight", "click", () => (this.yo = +1));
     $on("#btnSend", "click", () =>
@@ -68,7 +70,7 @@ class ClientGame {
     this.start = Date.now();
 
     this.world = new World(seed);
-    this.world.state = "INIT";
+    this.world.state = "INIT"; // TODO: nope. proxy non-shared state
     this.renderer = new Renderer();
     this.entities = new Map();
 
@@ -89,12 +91,15 @@ class ClientGame {
         msg("Connected. Client id " + this.client_id);
         $id(this.client_id);
         break;
-
+      case "LOBBY":
+        $world_id("LOBBY");
+        break;
       case "NEW_WORLD":
         if (this.tickTimer) {
           clearTimeout(this.tickTimer);
         }
         this.player_id = data.id;
+        this.isDead = false;
         $player_id(this.player_id);
         $world_id(data.world);
         this.newWorld(data);
@@ -130,6 +135,7 @@ class ClientGame {
         $player_id(this.pending_inputs.length);
         if (data.isDead) {
           this.world.state = "DEAD";
+          this.isDead = true;
         }
 
         // Apply pending inputs to player
@@ -186,7 +192,7 @@ class ClientGame {
       return;
     }
 
-    if (!world.isDead) {
+    if (!this.isDead) {
       if (Math.random() < 0.03) {
         //  this.yo = Math.random() * 0.3 + 0.1;
         this.xo = 0;
