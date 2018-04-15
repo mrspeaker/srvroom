@@ -25,9 +25,9 @@ class Renderer {
       ctx.fillRect(e.pos.x, e.pos.y, 3, 3);
     });
 
-    if (world.isDead) {
+    if (world.state) {
       ctx.fillStyle = "#fff";
-      ctx.fillText("dead", 20, 20);
+      ctx.fillText(world.state, 20, 20);
     }
   }
 }

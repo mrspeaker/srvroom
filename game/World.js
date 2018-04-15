@@ -6,7 +6,6 @@ class World {
     this.seed = seed;
     this.rand = rand(seed);
 
-    this.state = "INIT";
     this.scene = [];
     this.col = (this.rand() * 360) | 0;
     this.boxes = [...Array(4)].map(() => ({
@@ -28,7 +27,7 @@ class World {
     this.scene = this.scene.filter(ent => e !== ent);
   }
 
-  tick() {
+  tick () {
     const dead = [];
     this.scene = this.scene.filter(p => {
       if (p.pos.x < 0 || p.pos.x > 100 || p.pos.y < 0 || p.pos.y > 100) {

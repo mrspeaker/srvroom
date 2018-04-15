@@ -22,6 +22,10 @@ class ServerGame {
     this.onClientLeft = onClientLeft;
     this.onGameOver = onGameOver;
 
+    this.state = {
+      state: "INIT"
+    };
+
     [...room.clients.values()].forEach(c => this.addClient(c));
 
     this.tick();
@@ -99,6 +103,62 @@ class ServerGame {
   }
 
   tick() {
+    const { entities, botEntities, state, room } = this;
+
+    switch (state.state) {
+      case "INIT":
+        this.readyTime = Date.now() + 2000;
+        state.state = "READY";
+        break;
+      case "READY":
+        room.clients.forEach(c => {
+          c.send({
+            action: "TICK",
+            state: state.state,
+            time: this.readyTime - Date.now()
+          });
+        });
+        if (Date.now() >= this.readyTime) {
+          this.pendingInputs = [];
+          state.state = "PLAY";
+        }
+        break;
+      case "PLAY":
+        this.tickPlay();
+        if (entities.size - botEntities.size <= 1) {
+          state.state = "GAMEOVER";
+          state.time = Date.now() + 2000;
+        }
+        break;
+      case "GAMEOVER":
+        room.clients.forEach(c => {
+          c.send({
+            action: "TICK",
+            state: state.state,
+            time: state.time - Date.now()
+          });
+        });
+        if (Date.now() >= state.time) {
+          state.state = "WORLDOVER";
+        }
+        break;
+      case "WORLDOVER":
+        this.onGameOver(this.room);
+        console.log("WORLD OVER", this.room.name);
+        state.state = "DEAD";
+        room.clients.forEach(c => this.onClientLeft(c));
+        break;
+      case "DEAD":
+        break;
+      default:
+    }
+
+    if (state.state != "DEAD") {
+      setTimeout(() => this.tick(), 1000 / 10);
+    }
+  }
+
+  tickPlay() {
     const {
       world,
       room,
@@ -110,7 +170,6 @@ class ServerGame {
     } = this;
 
     // TODO: figure out what is Game and what is Net.
-
     pendingInputs.forEach(({ id, xo, yo, isBot, seq }) => {
       const p = entities.get(id);
       if (p) {
@@ -140,30 +199,20 @@ class ServerGame {
       b.update();
     });
 
+    // TODO: messages that come from the Game could be abstracted
     const poss = this.getAllPos();
-
     room.clients.forEach(c => {
       const pid = clientToEntity.get(c.id);
       const isDead = dead.indexOf(pid) >= 0;
       c.send({
         action: "TICK",
-        state: world.state,
+        state: this.state.state,
         pos: poss,
         dead,
         isDead,
         lseq: clientLastSeqNum.get(pid)
       });
-      if (isDead) {
-        this.onClientLeft(c);
-      }
     });
-
-    if (entities.size - botEntities.size > 0) {
-      setTimeout(() => this.tick(), 1000 / 10);
-    } else {
-      this.onGameOver(this.room);
-      console.log("WORLD OVER", this.room.name);
-    }
   }
 }
 

@@ -62,18 +62,13 @@ class ClientGame {
     this.ws = ws;
   }
 
-  die() {
-    msg("DEAD");
-    this.world.isDead = true;
-    this.deadTime = 100;
-  }
-
   newWorld(data) {
     const { seed } = data;
     msg("Startin game." + JSON.stringify(data));
     this.start = Date.now();
 
     this.world = new World(seed);
+    this.world.state = "INIT";
     this.renderer = new Renderer();
     this.entities = new Map();
 
@@ -107,22 +102,9 @@ class ClientGame {
         break;
 
       case "TICK":
-        this.lastTick = Date.now();
-        this.setEntities(data.pos, data.dead);
-        $player_id(this.pending_inputs.length);
-        if (data.isDead) {
-          this.die();
-        }
-
-        // Apply pending inputs to player
-        this.pending_inputs = this.pending_inputs.filter(i => {
-          if (i.seq > data.lseq) {
-            return true;
-          }
-          this.entity.update(i);
-          return false;
-        });
+        this.onReceiveTick(data);
         break;
+
       default:
         msg(e.data);
     }
@@ -134,6 +116,35 @@ class ClientGame {
       return;
     }
     ws.send(JSON.stringify(msg));
+  }
+
+  onReceiveTick(data) {
+    switch (data.state) {
+      case "READY":
+        this.world.state = "READY " + data.time;
+        break;
+      case "PLAY":
+        this.lastTick = Date.now();
+        this.world.state = "";
+        this.setEntities(data.pos, data.dead);
+        $player_id(this.pending_inputs.length);
+        if (data.isDead) {
+          this.world.state = "DEAD";
+        }
+
+        // Apply pending inputs to player
+        this.pending_inputs = this.pending_inputs.filter(i => {
+          if (i.seq > data.lseq) {
+            return true;
+          }
+          this.entity.update(i);
+          return false;
+        });
+        break;
+      case "GAMEOVER":
+        this.world.state = "GAMEOVER" + data.time;
+        break;
+    }
   }
 
   setEntities(data, dead = []) {
@@ -188,11 +199,6 @@ class ClientGame {
 
     world.tick();
     renderer.render(world);
-
-    if (world.isDead && --this.deadTime < 0) {
-      this.world = null;
-      return;
-    }
 
     dgb(
       world.scene.length +
