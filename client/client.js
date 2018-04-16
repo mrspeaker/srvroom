@@ -16,30 +16,28 @@ class ClientGame {
     this.world = null;
     this.renderer = null;
     this.client_id = null;
-    this.player_id = null;
     this.ws = null;
 
     this.pending_inputs = [];
     this.input_sequence_number = 0;
 
     this.entities = new Map();
-    this.entity = null;
 
-    // TODO: should be generic syncable "inputs"
-    this.xo = 0;
-    this.yo = 0.15;
     this.lastX = 0;
     this.lastY = 0;
+    this.input = {
+      xo: 0,
+      yo: 0.15
+    };
 
     this.state = {
       isDead: false,
       entity: null,
-      player_id: null,
       state: "INIT"
     };
 
-    $on("#btnLeft", "click", () => (this.yo = -1));
-    $on("#btnRight", "click", () => (this.yo = +1));
+    $on("#btnLeft", "click", () => (this.input.yo = -1));
+    $on("#btnRight", "click", () => (this.input.yo = +1));
     $on("#btnSend", "click", () =>
       this.send({ action: "CHAT", msg: $("#msg").value })
     );
@@ -72,7 +70,7 @@ class ClientGame {
 
   newWorld(data) {
     const { seed } = data;
-    msg("Startin game." + JSON.stringify(data));
+    msg("Startin game. " + data.action + " " +  data.world + " : " + data.seed);
     this.start = Date.now();
 
     this.world = new World(seed);
@@ -82,11 +80,10 @@ class ClientGame {
     this.pending_inputs = [];
     this.input_sequence_number = 0;
     this.setEntities([{ id: data.id, x: data.x, y: data.y, bot: false }]);
-    this.entity = this.entities.get(this.player_id);
+    const entity = this.entities.get(data.id);
     this.state = {
       isDead: false,
-      entity: this.entity,
-      player_id: this.player_id,
+      entity,
       state: "INIT"
     };
   }
@@ -108,11 +105,9 @@ class ClientGame {
         if (this.tickTimer) {
           clearTimeout(this.tickTimer);
         }
-        this.player_id = data.id;
-        this.state.isDead = false;
-        $player_id(this.player_id);
-        $world_id(data.world);
         this.newWorld(data);
+        $player_id(data.id);
+        $world_id(data.world);
         this.tick();
         break;
 
@@ -154,7 +149,7 @@ class ClientGame {
           if (i.seq > data.lseq) {
             return true;
           }
-          this.entity.update(i);
+          state.entity.update(i);
           return false;
         });
         break;
@@ -179,10 +174,11 @@ class ClientGame {
         entity = world.addEntity(id);
         entities.set(id, entity);
         entity.__bot = bot;
+        // Hmmm, no... pos_buffer is injected on entity.
         entity.pos.x = x;
         entity.pos.y = y;
         entity.position_buffer = [];
-      } else if (entity === this.entity) {
+      } else if (entity === this.state.entity) {
         // Local entity, just set it.
         this.lastX = x;
         this.lastY = y;
@@ -203,17 +199,16 @@ class ClientGame {
   }
 
   tick() {
-    const { world, renderer, state } = this;
+    const { world, renderer, state, input } = this;
     if (!world) {
       return;
     }
 
     if (!state.isDead) {
       if (Math.random() < 0.03) {
-        //  this.yo = Math.random() * 0.3 + 0.1;
-        this.xo = 0;
+        input.xo = 0;
       }
-      this.xo += (Math.random() * 2 - 1) * 0.01;
+      input.xo += (Math.random() * 2 - 1) * 0.01;
 
       this.processInputs();
     }
@@ -237,30 +232,30 @@ class ClientGame {
   }
 
   processInputs() {
-    const { xo, yo, player_id } = this;
+    const { input, state } = this;
+    const { xo, yo } = input;
     if (!(xo || yo)) {
       return;
     }
-    const input = {
+    const i = {
       action: "INPUT",
       xo,
       yo,
       seq: this.input_sequence_number++,
-      entity_id: player_id
+      entity_id: state.entity.id
     };
 
-    this.pending_inputs.push(input);
-    this.send(input);
-    this.entity.update(input);
+    this.pending_inputs.push(i);
+    this.send(i);
+    state.entity.update(i);
   }
 
   interpolateEntities() {
-    const { entities, entity } = this;
-    const entity_id = entity.id;
+    const { entities, state } = this;
     const now = Date.now();
     const render_timestamp = now - 1000.0 / 10.0; //server.update_rate;
     entities.forEach(entity => {
-      if (entity.id == entity_id) {
+      if (entity === state.entity) {
         return;
       }
       // Find the two authoritative positions surrounding the rendering timestamp.
