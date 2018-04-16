@@ -14,9 +14,9 @@ class Room {
     if (room) {
       room.leave(client);
     }
-    client.room = this;
     clients.set(id, client);
-    client.send({action :"JOINED_ROOM", data: name});
+    client.room = this;
+    client.send({ action: "JOINED_ROOM", data: name });
   }
 
   handleMessage(id, msg) {

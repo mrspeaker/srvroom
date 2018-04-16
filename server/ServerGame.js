@@ -44,7 +44,7 @@ class ServerGame {
 
   addClient(client) {
     const { room, world, clientToEntity } = this;
-    const p = this.addEntity(client);
+    const p = this.addEntity(`hsl(${(Math.random() * 360) | 0}, 70%, 50%)`);
     clientToEntity.set(client.id, p.id);
     client.send({
       action: "NEW_WORLD",
@@ -71,7 +71,8 @@ class ServerGame {
         x: p.pos.x,
         y: p.pos.y,
         angle: p.angle,
-        bot: !!p.bot
+        bot: !!p.bot,
+        col: p.color
       };
     });
   }

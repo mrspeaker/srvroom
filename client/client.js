@@ -45,15 +45,6 @@ class ClientGame {
     $("#port").value = env.port;
     $("#btnJoin").onclick = () =>
       this.connect($("#host").value, $("#port").value);
-
-    this.ticker = (() => {
-      let ds = [];
-      return () => {
-        const dx = ds.slice(1).map((d, i) => d - ds[i]);
-        ds = [...ds.slice(-30), Date.now()];
-        return dx.reduce((ac, el) => ac + el, 0) / dx.length;
-      };
-    })();
   }
 
   connect(host, port) {
@@ -167,16 +158,16 @@ class ClientGame {
   setEntities(data, dead = []) {
     const { world, entities } = this;
     data.forEach(p => {
-      const { id, x, y, angle, bot } = p;
+      const { id, x, y, angle, bot, col } = p;
       let entity = entities.get(id);
       if (!entity) {
         // new entity
         entity = world.addEntity(id);
         entities.set(id, entity);
-        entity.__bot = bot;
         // Hmmm, no... pos_buffer is injected on entity.
         entity.pos.x = x;
         entity.pos.y = y;
+        entity.color = col;
         entity.position_buffer = [];
       } else if (entity === this.state.entity) {
         // Local entity, just set it.
@@ -184,6 +175,7 @@ class ClientGame {
         this.lastY = y;
         entity.pos.x = x;
         entity.pos.y = y;
+        entity.color = col;
       } else {
         // Add it to the position buffer for interpolation
         entity.position_buffer.push([Date.now(), { x, y }]);

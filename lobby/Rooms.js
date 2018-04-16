@@ -3,7 +3,7 @@ import Room from "./Room.js";
 class Rooms {
   constructor() {
     this.rooms = new Map();
-    this.rooms.set(Rooms.LOBBY, new Room(Rooms.LOBBY));
+    this.add(Rooms.LOBBY);
   }
 
   find (name) {
@@ -18,7 +18,7 @@ class Rooms {
     if (client.room) {
       client.room.leave(client);
     }
-    this.rooms.get(Rooms.LOBBY).join(client);
+    this.lobby.join(client);
     this.onEnterLobby && this.onEnterLobby(client);
   }
 
@@ -30,7 +30,7 @@ class Rooms {
 
   remove(name) {
     const { rooms } = this;
-    const room = rooms.get(name);
+    const room = this.find(name);
     if (!room || name === Rooms.LOBBY) return;
     room.clients.forEach(c => this.addToLobby(c));
     rooms.delete(name);

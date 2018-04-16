@@ -22,4 +22,13 @@ describe("Rooms", () => {
     expect(rooms.find(roomName)).not.toBeDefined();
   });
 
+  test("Can't delete lobby", () => {
+    rooms.remove(Rooms.LOBBY);
+    expect(rooms.find(Rooms.LOBBY)).toBeDefined();
+  });
+
+  test("Add to lobby feature", () => {
+    rooms.remove(Rooms.LOBBY);
+    expect(rooms.find(Rooms.LOBBY)).toBeDefined();
+  });
 });

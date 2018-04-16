@@ -12,7 +12,7 @@ class Renderer {
 
   render(world, state) {
     const { ctx } = this;
-    ctx.fillStyle = "#000";
+    ctx.fillStyle = !state.isDead ? "#000" : "#300";
     ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     const { boxes, scene, col } = world;
     ctx.fillStyle = `hsl(${col}, 50%, 30%)`;
@@ -21,8 +21,12 @@ class Renderer {
     });
 
     scene.forEach(e => {
-      ctx.fillStyle = e === state.entity ? "#e30" : e.__bot ? "#0f0" : "#ff0";
-      ctx.fillRect(e.pos.x, e.pos.y, 3, 3);
+      if (e === state.entity && (Date.now() / 1000) % 0.2 < 0.1) {
+        ctx.fillStyle = "#888";
+        ctx.fillRect((e.pos.x | 0) - 1, (e.pos.y | 0) - 1, 5, 5);
+      }
+      ctx.fillStyle = e.color ? e.color : "#f00"; //e === state.entity ?
+      ctx.fillRect(e.pos.x | 0, e.pos.y | 0, 3, 3);
     });
 
     if (state.state) {
