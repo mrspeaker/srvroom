@@ -6,6 +6,13 @@ const server = new Server(env.port);
 const { rooms } = server;
 const games = new Map();
 
+/*
+  This file contains all the coordination logic for setting up and
+  bringing down games with rooms. Need to figure out what should be in
+  an API and what should be per-game.
+*/
+
+// Send Client ID to client.
 server.onClientConnect = client =>
   client.ws.send(
     JSON.stringify({
@@ -14,12 +21,14 @@ server.onClientConnect = client =>
     })
   );
 
+// Match making
 rooms.onEnterLobby = () => {
-  if (rooms.lobby.count >= 3) { // Game logic
+  if (rooms.lobby.count >= 3) {
     addGame(rooms.lobby.clients, makeRoom());
   }
 };
 
+// Game events
 const onClientLeft = client => rooms.addToLobby(client);
 const onGameOver = room => {
   games.delete(room.name);
