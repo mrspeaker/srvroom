@@ -1,5 +1,5 @@
 import World from "../game/World.js";
-import Bot from "./Bot.js";
+import Bot from "../game/Bot.js";
 
 class ServerGame {
   constructor(room, onClientLeft, onGameOver) {

@@ -1,3 +1,9 @@
+/*
+  Bots will need a way to convey their inputs to the server.
+  Here I've passed in "send" as a function, but it means the end user
+  of the lib needs to know how this works - i think better is a convention
+  of like, "store inputs in a var `input`" and it gets processed.
+*/
 class Bot {
   constructor(player, send) {
     this.id = player.id;
