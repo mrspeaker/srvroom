@@ -15,7 +15,7 @@ server.onClientConnect = client =>
   );
 
 rooms.onEnterLobby = () => {
-  if (rooms.lobby.count >= 3) {
+  if (rooms.lobby.count >= 3) { // Game logic
     addGame(rooms.lobby.clients, makeRoom());
   }
 };
@@ -23,7 +23,7 @@ rooms.onEnterLobby = () => {
 const onClientLeft = client => rooms.addToLobby(client);
 const onGameOver = room => {
   games.delete(room.name);
-  // rooms.delete(room.name)?
+  rooms.remove(room.name);
 };
 const makeRoom = (() => {
   let world_id = 0;

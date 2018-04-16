@@ -20,15 +20,16 @@ class Rooms {
 
   add(name) {
     const room = new Room(name);
-    this.rooms[name] = room;
+    this.rooms.set(name, room);
     return room;
   }
 
   remove(name) {
-    const room = this.rooms.get(name);
+    const { rooms } = this;
+    const room = rooms.get(name);
     if (!room || name === Rooms.LOBBY) return;
     room.clients.forEach(c => this.addToLobby(c));
-    this.rooms.delete(name);
+    rooms.delete(name);
   }
 }
 Rooms.LOBBY = "lobby";
