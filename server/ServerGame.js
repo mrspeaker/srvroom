@@ -63,7 +63,7 @@ class ServerGame {
     console.log("ADDED bot", b.id, "to", name);
   }
 
-  getAllPos() {
+  getEntityNetworkData() {
     const { entities } = this;
     return Array.from(entities, ([, p]) => {
       return {
@@ -200,7 +200,7 @@ class ServerGame {
 
     const dead = world.tick();
     dead.forEach(d => {
-      // TODO: better sepeartion of clients and bots - here just deleteing from both!
+      // TODO: better handling of clients and bots - just deleteing from both!
       entities.delete(d);
       botEntities.delete(d);
     });
@@ -210,13 +210,15 @@ class ServerGame {
       b.update();
     });
 
+    // Send tick data to each client
+    const entityData = this.getEntityNetworkData();
     room.clients.forEach(c => {
       const pid = clientToEntity.get(c.id);
       const isDead = dead.indexOf(pid) >= 0;
       c.send({
         action: "TICK",
         state: state.state,
-        pos: this.getAllPos(),
+        pos: entityData,
         dead,
         isDead,
         lseq: clientLastSeqNum.get(pid)

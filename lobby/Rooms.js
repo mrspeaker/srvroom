@@ -6,8 +6,12 @@ class Rooms {
     this.rooms.set(Rooms.LOBBY, new Room(Rooms.LOBBY));
   }
 
+  find (name) {
+    return this.rooms.get(name);
+  }
+
   get lobby() {
-    return this.rooms.get(Rooms.LOBBY);
+    return this.find(Rooms.LOBBY);
   }
 
   addToLobby(client) {
