@@ -25,7 +25,7 @@ class Renderer {
         ctx.fillStyle = "#888";
         ctx.fillRect((e.pos.x | 0) - 1, (e.pos.y | 0) - 1, 5, 5);
       }
-      ctx.fillStyle = e.color ? e.color : "#f00"; //e === state.entity ?
+      ctx.fillStyle = e.color || "#f00"; //e === state.entity ?
       ctx.fillRect(e.pos.x | 0, e.pos.y | 0, 3, 3);
     });
 
