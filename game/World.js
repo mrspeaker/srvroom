@@ -8,11 +8,13 @@ class World {
 
     this.scene = [];
     this.col = (this.rand() * 360) | 0;
-    this.boxes = [...Array(4)].map(() => ({
+    this.boxId = 0;
+    this.boxes = [...Array(24)].map(() => ({
       x: this.rand() * 100,
       y: this.rand() * 100,
       w: 8,
-      h: 8
+      h: 8,
+      id: this.boxId++
     }));
     this.isDead = false;
   }

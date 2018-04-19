@@ -23,6 +23,7 @@ class Player {
 
     this.angle += xo;
 
+    let boxHit = null;
     const noHit = boxes.every(b => {
       if (
         pos.x + xx + w >= b.x &&
@@ -30,6 +31,7 @@ class Player {
         pos.y + yy + h >= b.y &&
         pos.y + yy <= b.y + b.h
       ) {
+        boxHit = b.id;
         return false;
       }
       return true;
@@ -42,6 +44,7 @@ class Player {
       pos.x += Math.random() * 2 - 1;
       pos.y += Math.random() * 2 - 1;
     }
+    return boxHit;
   }
 }
 

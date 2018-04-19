@@ -120,7 +120,7 @@ class ClientGame {
   }
 
   onReceiveTick(data) {
-    const { state } = this;
+    const { state, world } = this;
     switch (data.state) {
       case "READY":
         state.state = "READY " + data.time;
@@ -143,6 +143,10 @@ class ClientGame {
           state.entity.update(i);
           return false;
         });
+
+        if(data.deadBricks) {
+          world.boxes = world.boxes.filter(b => !data.deadBricks.includes(b.id));
+        }
         break;
       case "GAMEOVER":
         state.state = "GAMEOVER" + data.time;

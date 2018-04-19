@@ -182,10 +182,15 @@ class ServerGame {
     } = this;
 
     // TODO: figure out what is Game and what is Net.
+    const deadBricks = [];
     pendingInputs.forEach(({ id, xo, yo, isBot, seq }) => {
       const p = entities.get(id);
       if (p) {
-        p.update({ xo, yo });
+        const hitBrick = p.update({ xo, yo });
+        if (hitBrick) {
+          deadBricks.push(hitBrick);
+          world.boxes = world.boxes.filter(b => b.id != hitBrick)
+        }
       } else {
         console.error("Entity dead (or unknown):", id);
       }
@@ -213,6 +218,7 @@ class ServerGame {
 
     // Send tick data to each client
     const entityData = this.getEntityNetworkData();
+    if (deadBricks.length) console.log(deadBricks.join(","))
     room.clients.forEach(c => {
       const pid = clientToEntity.get(c.id);
       const isDead = dead.indexOf(pid) >= 0;
@@ -221,6 +227,7 @@ class ServerGame {
         state: state.state,
         pos: entityData,
         dead,
+        deadBricks,
         isDead,
         lseq: clientLastSeqNum.get(pid)
       });
