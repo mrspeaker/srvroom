@@ -36,8 +36,8 @@ class ServerGame {
     const id = ++this.entityId;
     const p = world.addEntity(id);
     p.color = color;
-    p.pos.x = (Math.random() * 100) | 0;
-    p.pos.y = (Math.random() * 100) | 0;
+    p.pos.x = (Math.random() * 50) | 0 + 25;
+    p.pos.y = (Math.random() * 50) | 0 + 25;
     entities.set(id, p);
     return p;
   }
@@ -52,7 +52,7 @@ class ServerGame {
       world: room.name,
       seed: world.seed,
       x: p.pos.x,
-      y: p.pos.y
+      y: p.pos.y,
     });
   }
 
@@ -189,7 +189,7 @@ class ServerGame {
         const hitBrick = p.update({ xo, yo });
         if (hitBrick) {
           deadBricks.push(hitBrick);
-          world.boxes = world.boxes.filter(b => b.id != hitBrick)
+          world.boxes = world.boxes.filter(b => b.id != hitBrick);
         }
       } else {
         console.error("Entity dead (or unknown):", id);
@@ -201,7 +201,7 @@ class ServerGame {
     this.pendingInputs = [];
 
     if (Math.random() < 0.01) {
-      this.addBot(room.name);
+      //this.addBot(room.name);
     }
 
     const dead = world.tick();
@@ -218,7 +218,6 @@ class ServerGame {
 
     // Send tick data to each client
     const entityData = this.getEntityNetworkData();
-    if (deadBricks.length) console.log(deadBricks.join(","))
     room.clients.forEach(c => {
       const pid = clientToEntity.get(c.id);
       const isDead = dead.indexOf(pid) >= 0;

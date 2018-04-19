@@ -16,7 +16,7 @@ class Renderer {
     ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     const { boxes, scene, col } = world;
     ctx.fillStyle = `hsl(${col}, 50%, 30%)`;
-    boxes.forEach(({ x, y }) => {
+    boxes.forEach(({ x, y, id }) => {
       ctx.fillRect(x, y, 8, 8);
     });
 

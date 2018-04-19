@@ -23,7 +23,7 @@ server.onClientConnect = client =>
 
 // Match making
 rooms.onEnterLobby = () => {
-  if (rooms.lobby.count >= 3) {
+  if (rooms.lobby.count >= 4) {
     addGame(rooms.lobby.clients, makeRoom());
   }
 };

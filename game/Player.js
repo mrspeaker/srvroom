@@ -36,13 +36,13 @@ class Player {
       }
       return true;
     });
-    if (noHit) {
+    if (noHit || true) {
       pos.x += xx;
       pos.y += yy;
     } else {
       // NOPE: wll be different local / server.
-      pos.x += Math.random() * 2 - 1;
-      pos.y += Math.random() * 2 - 1;
+      //pos.x += Math.random() * 2 - 1;
+      //pos.y += Math.random() * 2 - 1;
     }
     return boxHit;
   }
