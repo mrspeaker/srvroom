@@ -201,7 +201,7 @@ class ServerGame {
     this.pendingInputs = [];
 
     if (Math.random() < 0.01) {
-      //this.addBot(room.name);
+      this.addBot(room.name);
     }
 
     const dead = world.tick();
